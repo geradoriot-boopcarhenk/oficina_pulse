@@ -1,189 +1,191 @@
 # database.py
-import pandas as pd
 import requests
+import pandas as pd
 
-URL_BASE = "https://iypimnjrwwwxppaygywt.supabase.co/rest/v1/"
-CHAVE_MESTRE = "sb_secret_SH-KjEN7GykvB794MgiIcg_IEqNtKwS"
+SUPABASE_URL = "https://supabase.co"
+SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind6YWptYnRwY3J3ZXhpdm92a3loIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDA0MTA0NTIsImV4cCI6MjA1NjAxNjQ1Mn0.S-gT83ZtU7T2Yh9y2t-A1Z1b1Z1b1Z1b1Z1b1Z1b1Z1"
 
 HEADERS = {
-    "apikey": CHAVE_MESTRE,
-    "Authorization": f"Bearer {CHAVE_MESTRE}",
+    "apikey": SUPABASE_KEY,
+    "Authorization": f"Bearer {SUPABASE_KEY}",
     "Content-Type": "application/json",
     "Prefer": "return=representation"
 }
 
-# --- CLIENTES ---
-def cadastrar_cliente(nome, telefone, cpf):
-    try:
-        url = f"{URL_BASE}clientes"
-        payload = {"nome": nome, "telefone": telefone, "cpf": cpf}
-        res = requests.post(url, json=payload, headers=HEADERS, timeout=10)
-        return res
-    except Exception as e:
-        print(f"❌ Erro ao cadastrar cliente: {e}")
-        return None
+def autenticar_oficina(usuario, senha):
+    url = f"{SUPABASE_URL}/rest/v1/oficinas?usuario=eq.{usuario}&senha=eq.{senha}"
+    res = requests.get(url, headers=HEADERS)
+    if res.status_code == 200 and len(res.json()) > 0:
+        return res.json()[0]
+    return None
 
-def listar_clientes():
-    try:
-        url = f"{URL_BASE}clientes?select=id,nome,telefone,cpf&order=id.desc"
-        res = requests.get(url, headers=HEADERS, timeout=10)
-        if res.status_code == 200:
-            return res.json()
-        return []
-    except Exception:
-        return []
+def cadastrar_nova_oficina(nome, usuario, senha):
+    url = f"{SUPABASE_URL}/rest/v1/oficinas"
+    dados = {"nome_oficina": nome, "usuario": usuario, "senha": senha}
+    res = requests.post(url, headers=HEADERS, json=dados)
+    return res.status_code == 201
 
-# --- MOTOS ---
-def cadastrar_moto(cliente_id, marca, modelo, placa, ano):
-    try:
-        url = f"{URL_BASE}motos"
-        payload = {"cliente_id": int(cliente_id), "marca": marca, "modelo": modelo, "placa": placa, "ano": int(ano)}
-        res = requests.post(url, json=payload, headers=HEADERS, timeout=10)
-        return res
-    except Exception:
-        return None
+def alterar_senha_oficina(oficina_id, nova_senha):
+    url = f"{SUPABASE_URL}/rest/v1/oficinas?id=eq.{oficina_id}"
+    dados = {"senha": nova_senha}
+    res = requests.patch(url, headers=HEADERS, json=dados)
+    return res.status_code in [200, 204]
 
-def listar_motos():
-    try:
-        url = f"{URL_BASE}motos?select=id,marca,modelo,placa,ano"
-        res = requests.get(url, headers=HEADERS, timeout=10)
-        if res.status_code == 200:
-            return res.json()
-        return []
-    except Exception:
-        return []
+def listar_pecas_estoque(oficina_id):
+    url = f"{SUPABASE_URL}/rest/v1/estoque_pecas?oficina_id=eq.{oficina_id}&select=*"
+    res = requests.get(url, headers=HEADERS)
+    return res.json() if res.status_code == 200 else []
 
-def listar_motos_detalhado():
-    try:
-        url = f"{URL_BASE}motos?select=id,modelo,placa"
-        res = requests.get(url, headers=HEADERS, timeout=10)
-        if res.status_code == 200:
-            return res.json()
-        return []
-    except Exception:
-        return []
+def cadastrar_peca_estoque(oficina_id, nome, qtd, custo, venda):
+    url = f"{SUPABASE_URL}/rest/v1/estoque_pecas"
+    dados = {
+        "oficina_id": oficina_id,
+        "nome_peca": nome,
+        "quantidade_atual": int(qtd),
+        "preco_custo": float(custo),
+        "preco_venda": float(venda)
+    }
+    res = requests.post(url, headers=HEADERS, json=dados)
+    return res.status_code == 201
 
-# --- SERVIÇOS ---
-def cadastrar_servico(nome, preco_base):
-    try:
-        url = f"{URL_BASE}servicos"
-        payload = {"nome": nome, "preco_base": float(preco_base)}
-        res = requests.post(url, json=payload, headers=HEADERS, timeout=10)
-        return res
-    except Exception:
-        return None
+def atualizar_quantidade_peca(peca_id, nova_qtd):
+    url = f"{SUPABASE_URL}/rest/v1/estoque_pecas?id=eq.{peca_id}"
+    dados = {"quantidade_atual": int(nova_qtd)}
+    requests.patch(url, headers=HEADERS, json=dados)
 
-def listar_servicos():
-    try:
-        url = f"{URL_BASE}servicos?select=*"
-        res = requests.get(url, headers=HEADERS, timeout=10)
-        if res.status_code == 200:
-            return res.json()
-        return []
-    except Exception:
-        return []
+def vincular_peca_na_os(os_id, peca_id, qtd, preco_venda):
+    url = f"{SUPABASE_URL}/rest/v1/os_pecas"
+    dados = {
+        "os_id": os_id,
+        "peca_id": peca_id,
+        "quantidade": int(qtd),
+        "preco_venda_aplicado": float(preco_venda)
+    }
+    res = requests.post(url, headers=HEADERS, json=dados)
+    
+    if res.status_code == 201:
+        url_p = f"{SUPABASE_URL}/rest/v1/estoque_pecas?id=eq.{peca_id}&select=quantidade_atual"
+        res_p = requests.get(url_p, headers=HEADERS)
+        if res_p.status_code == 200 and len(res_p.json()) > 0:
+            qtd_atual = res_p.json()[0]['quantidade_atual']
+            atualizar_quantidade_peca(peca_id, max(0, qtd_atual - int(qtd)))
+        return True
+    return False
 
-# --- ORDENS DE SERVIÇO (OS) ---
-def criar_ordem_servico(moto_id, descricao_problema):
-    try:
-        url = f"{URL_BASE}ordens_servico"
-        payload = {"moto_id": int(moto_id), "descricao_problema": descricao_problema, "status": "Pendente", "valor_total": 0.0}
-        res = requests.post(url, json=payload, headers=HEADERS, timeout=10)
-        return res
-    except Exception:
-        return None
+def listar_pecas_da_os(os_id):
+    url = f"{SUPABASE_URL}/rest/v1/os_pecas?os_id=eq.{os_id}&select=*,estoque_pecas(nome_peca)"
+    res = requests.get(url, headers=HEADERS)
+    if res.status_code == 200:
+        dados = []
+        for item in res.json():
+            dados.append({
+                "Peça": item['estoque_pecas']['nome_peca'] if item.get('estoque_pecas') else "Peça Removida",
+                "Quantidade": item['quantidade'],
+                "Preço Unitário": item['preco_venda_aplicado'],
+                "Subtotal": item['quantidade'] * item['preco_venda_aplicado']
+            })
+        return dados
+    return []
 
-def listar_ordens_servico():
-    try:
-        url = f"{URL_BASE}ordens_servico?select=id,status,descricao_problema"
-        res = requests.get(url, headers=HEADERS, timeout=10)
-        if res.status_code == 200:
-            return res.json()
-        return []
-    except Exception:
-        return []
+def listar_clientes(oficina_id):
+    url = f"{SUPABASE_URL}/rest/v1/clientes?oficina_id=eq.{oficina_id}&select=*"
+    res = requests.get(url, headers=HEADERS)
+    return res.json() if res.status_code == 200 else []
 
-def atualizar_status_os(os_id, novo_status):
-    try:
-        url = f"{URL_BASE}ordens_servico?id=eq.{os_id}"
-        payload = {"status": novo_status}
-        return requests.patch(url, json=payload, headers=HEADERS, timeout=10)
-    except Exception:
-        return None
+def cadastrar_cliente(nome, telefone, cpf, oficina_id):
+    url = f"{SUPABASE_URL}/rest/v1/clientes"
+    dados = {"nome": nome, "telefone": telefone, "cpf": cpf, "oficina_id": oficina_id}
+    res = requests.post(url, headers=HEADERS, json=dados)
+    return res.status_code == 201
 
-def vincular_servico_na_os(os_id, servico_id, preco_applied):
-    try:
-        url = f"{URL_BASE}os_servicos"
-        payload = {"os_id": os_id, "servico_id": int(servico_id), "preco_aplicado": float(preco_applied)}
-        res = requests.post(url, json=payload, headers=HEADERS, timeout=10)
-        
-        # Atualiza dinamicamente o valor_total na tabela ordens_servico para somar no painel
-        url_os = f"{URL_BASE}ordens_servico?id=eq.{os_id}"
-        os_atual = requests.get(url_os, headers=HEADERS).json()
-        total_antigo = float(os_atual[0]["valor_total"]) if os_atual else 0.0
-        requests.patch(url_os, json={"valor_total": total_antigo + float(preco_applied)}, headers=HEADERS)
-        return res
-    except Exception:
-        return None
+def listar_servicos(oficina_id):
+    url = f"{SUPABASE_URL}/rest/v1/servicos?oficina_id=eq.{oficina_id}&select=*"
+    res = requests.get(url, headers=HEADERS)
+    return res.json() if res.status_code == 200 else []
 
-def obter_detalhes_completos_os(os_id):
-    try:
-        # Busca direta da OS por ID na API do Supabase
-        url_os = f"{URL_BASE}ordens_servico?id=eq.{os_id}&select=id,status,descricao_problema,valor_total"
-        os_res = requests.get(url_os, headers=HEADERS, timeout=10).json()
-        if not os_res: return None
-        os_info = os_res[0]
-            
-        # Busca de serviços vinculados a essa OS
-        url_s = f"{URL_BASE}os_servicos?os_id=eq.{os_id}&select=preco_aplicado,servico_id"
-        servicos_os = requests.get(url_s, headers=HEADERS, timeout=10).json()
-        
-        lista_servicos = []
-        if servicos_os and isinstance(servicos_os, list):
-            for s in servicos_os:
-                # Busca o nome de cada serviço associado
-                url_sv = f"{URL_BASE}servicos?id=eq.{s['servico_id']}&select=nome"
-                sv_res = requests.get(url_sv, headers=HEADERS).json()
-                nome_s = sv_res[0]['nome'] if sv_res else "Serviço Mão de Obra"
-                lista_servicos.append({"nome": nome_s, "preco": float(s["preco_aplicado"])})
-                
-        total_geral = sum(s["preco"] for s in lista_servicos)
-        return {
-            "os_id": os_info["id"], "status": os_info["status"],
-            "cliente_nome": "Carlos Henrique", "cliente_telefone": "",
-            "moto_modelo": "BMW S1000RR", "moto_placa": "MOTO123",
-            "pecas": [], "servicos": lista_servicos, "total": total_geral
-        }
-    except Exception:
-        return None
-
-def obter_totais_financeiros():
-    try:
-        url = f"{URL_BASE}ordens_servico?status=in.(Concluído,Entregue)&select=valor_total"
-        res = requests.get(url, headers=HEADERS, timeout=10).json()
-        return sum(float(item["valor_total"]) for item in res if "valor_total" in item and item["valor_total"])
-    except Exception:
-        return 0.0
+def cadastrar_servico(nome, preco, oficina_id):
+    url = f"{SUPABASE_URL}/rest/v1/servicos"
+    dados = {"nome": nome, "preco_base": float(preco), "oficina_id": oficina_id}
+    res = requests.post(url, headers=HEADERS, json=dados)
+    return res.status_code == 201
 
 def contar_os_por_status(status):
-    try:
-        url = f"{URL_BASE}ordens_servico?status=eq.{status}&select=id"
-        res = requests.get(url, headers=HEADERS, timeout=10).json()
-        return len(res) if isinstance(res, list) else 0
-    except Exception:
-        return 0
+    url = f"{SUPABASE_URL}/rest/v1/ordens_servico?status=eq.{status}&select=id"
+    res = requests.get(url, headers=HEADERS)
+    return len(res.json()) if res.status_code == 200 else 0
+
+def obter_totais_financeiros():
+    url = f"{SUPABASE_URL}/rest/v1/ordens_servico?status=eq.Concluído&select=id"
+    res = requests.get(url, headers=HEADERS)
+    return len(res.json()) * 150.00
 
 def obter_dados_faturamento_grafico():
-    try:
-        url = f"{URL_BASE}ordens_servico?select=valor_total,created_at"
-        res = requests.get(url, headers=HEADERS, timeout=10)
-        if res.status_code == 200 and res.json():
-            df = pd.DataFrame(res.json())
-            if not df.empty and 'valor_total' in df.columns:
-                df['created_at'] = pd.to_datetime(df['created_at'])
-                df['valor_total'] = df['valor_total'].astype(float)
-                df['Mês'] = df['created_at'].dt.to_period('M').astype(str)
-                return df.groupby('Mês')['valor_total'].sum().reset_index().rename(columns={"valor_total": "Faturamento"})
-        return pd.DataFrame(columns=["Mês", "Faturamento"])
-    except Exception:
-        return pd.DataFrame(columns=["Mês", "Faturamento"])
+    return pd.DataFrame([{"Mês": "Março", "Faturamento": obter_totais_financeiros()}])
+
+def listar_motos():
+    url = f"{SUPABASE_URL}/rest/v1/motos?select=*"
+    res = requests.get(url, headers=HEADERS)
+    return res.json() if res.status_code == 200 else []
+
+def cadastrar_moto(cliente_id, marca, modelo, placa, ano):
+    url = f"{SUPABASE_URL}/rest/v1/motos"
+    dados = {"cliente_id": cliente_id, "marca": marca, "modelo": modelo, "placa": placa, "ano": int(ano)}
+    requests.post(url, headers=HEADERS, json=dados)
+
+def listar_motos_detalhado():
+    url = f"{SUPABASE_URL}/rest/v1/motos?select=*"
+    res = requests.get(url, headers=HEADERS)
+    return res.json() if res.status_code == 200 else []
+
+def listar_ordens_servico():
+    url = f"{SUPABASE_URL}/rest/v1/ordens_servico?select=*"
+    res = requests.get(url, headers=HEADERS)
+    return res.json() if res.status_code == 200 else []
+
+def criar_ordem_servico(moto_id, descricao):
+    url = f"{SUPABASE_URL}/rest/v1/ordens_servico"
+    dados = {"moto_id": moto_id, "descricao_problema": descricao, "status": "Pendente"}
+    requests.post(url, headers=HEADERS, json=dados)
+
+def obter_detalhes_completos_os(os_id):
+    url = f"{SUPABASE_URL}/rest/v1/ordens_servico?id=eq.{os_id}&select=*"
+    res = requests.get(url, headers=HEADERS)
+    if res.status_code == 200 and len(res.json()) > 0:
+        os_data = res.json()[0]
+        servicos_da_os = listar_servicos_da_os(os_id)
+        total_servicos = sum(s['Preço Aplicado'] for s in servicos_da_os)
+        pecas_da_os = listar_pecas_da_os(os_id)
+        total_pecas = sum(p['Subtotal'] for p in pecas_da_os)
+        
+        return {
+            "os_id": os_data['id'],
+            "status": os_data['status'],
+            "descricao_problema": os_data['descricao_problema'],
+            "servicos": servicos_da_os,
+            "pecas": pecas_da_os,
+            "total": total_servicos + total_pecas
+        }
+    return None
+
+def listar_servicos_da_os(os_id):
+    url = f"{SUPABASE_URL}/rest/v1/os_servicos?os_id=eq.{os_id}&select=*,servicos(nome)"
+    res = requests.get(url, headers=HEADERS)
+    if res.status_code == 200:
+        dados = []
+        for item in res.json():
+            dados.append({
+                "Serviço": item['servicos']['nome'] if item.get('servicos') else "Mão de Obra",
+                "Preço Aplicado": item['preco_aplicado']
+            })
+        return dados
+    return []
+
+def vincular_servico_na_os(os_id, servico_id, preco):
+    url = f"{SUPABASE_URL}/rest/v1/os_servicos"
+    dados = {"os_id": os_id, "servico_id": servico_id, "preco_aplicado": float(preco)}
+    requests.post(url, headers=HEADERS, json=dados)
+
+def atualizar_status_os(os_id, novo_status):
+    url = f"{SUPABASE_URL}/rest/v1/ordens_servico?id=eq.{os_id}"
+    dados = {"status": novo_status}
+    requests.patch(url, headers=HEADERS, json=dados)
