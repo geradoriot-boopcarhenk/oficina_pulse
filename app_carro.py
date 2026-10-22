@@ -4,20 +4,17 @@ import database as db
 import pandas as pd
 import utils
 import urllib.parse
+import base64
 
 st.set_page_config(page_title="Oficina Mecânica Automotiva", page_icon="🚗", layout="wide")
 
-# --- GERENCIADOR DE LOGIN MULTI-EMPRESAS ---
 if "oficina_autenticada" not in st.session_state:
     st.session_state["oficina_autenticada"] = None
 
-# --- TELA DE ACESSO BLINDADA ---
 if not st.session_state["oficina_autenticada"]:
     st.markdown("<h1 style='text-align: center; color: #EA580C;'>🚗 Oficina Pulse Automotiva - Portal de Assinantes</h1>", unsafe_allow_html=True)
     st.write("---")
-    
     tab_login, tab_cadastro = st.tabs(["🔑 Acessar Painel", "🏢 Cadastrar Nova Oficina"])
-    
     with tab_login:
         usuario_input = st.text_input("Usuário Administrativo")
         senha_input = st.text_input("Senha Comercial", type="password")
@@ -25,13 +22,12 @@ if not st.session_state["oficina_autenticada"]:
             oficina = db.autenticar_oficina(usuario_input, senha_input)
             if oficina:
                 st.session_state["oficina_autenticada"] = oficina
-                st.success(f"🎉 Bem-vindo!")
+                st.success("🎉 Bem-vindo!")
                 st.rerun()
             else:
-                st.error("❌ Credenciais incorretas ou assinatura inativa!")
-                
+                st.error("❌ Credenciais incorretas!")
     with tab_cadastro:
-        st.markdown("### 📝 Crie sua conta para começar a gerenciar e vender")
+        st.markdown("### 📝 Crie sua conta")
         novo_nome = st.text_input("Nome da Oficina / Razão Social")
         novo_user = st.text_input("Escolha um Usuário único")
         nova_senha = st.text_input("Escolha uma Senha segura", type="password")
@@ -40,28 +36,31 @@ if not st.session_state["oficina_autenticada"]:
                 if db.cadastrar_nova_oficina(novo_nome, novo_user, nova_senha):
                     st.success("✅ Oficina cadastrada! Faça login na aba ao lado.")
                 else:
-                    st.error("❌ Usuário já está em uso! Escolha outro.")
+                    st.error("❌ Usuário já está em uso!")
     st.stop()
 
 oficina_id = st.session_state["oficina_autenticada"]["id"]
 nome_oficina_ativa = st.session_state["oficina_autenticada"]["nome_oficina"]
 
-# --- BARRA LATERAL ---
-st.sidebar.markdown(f"### 🏢 {nome_oficina_ativa}")
+# --- RENDERIZADOR DA LOGOMARCA RENDERIZADA ---
+logo_data = db.obter_logomarca_oficina(oficina_id)
+if logo_data:
+    st.sidebar.image(f"data:image/png;base64,{logo_data}", use_container_width=True)
+else:
+    st.sidebar.markdown(f"### 🏢 {nome_oficina_ativa}")
+
 if st.sidebar.button("🚪 Sair / Trocar de Conta"):
     st.session_state["oficina_autenticada"] = None
     st.rerun()
 
 st.title(f"🚗 Gestão Integrada - {nome_oficina_ativa}")
-
-menu = ["Painel Geral", "Clientes & Carros", "Estoque de Peças", "Serviços & Reparos", "Ordens de Serviço (OS)"]
+menu = ["Painel Geral", "Clientes & Carros", "Estoque de Peças", "Serviços & Reparos", "Ordens de Serviço (OS)", "⚙️ Perfil da Oficina"]
 escolha = st.sidebar.selectbox("Mapeamento do Sistema", menu)
 
 if escolha == "Painel Geral":
     col1, col2 = st.columns(2)
     col1.metric("OS em Andamento", db.contar_os_por_status("Pendente") + db.contar_os_por_status("Em Andamento"))
     col2.metric("Faturamento Mensal", f"R$ {db.obter_totais_financeiros():,.2f}")
-    
     df_grafico = db.obter_dados_faturamento_grafico()
     if not df_grafico.empty: 
         st.line_chart(df_grafico.set_index("Mês"), y="Faturamento", color="#EA580C")
@@ -74,16 +73,12 @@ elif escolha == "Clientes & Carros":
             nome = st.text_input("Nome do Proprietário")
             cpf_visual = st.text_input("CPF")
             tel_visual = st.text_input("WhatsApp de Contato")
-            if st.form_submit_button("Salvar Registro"):
-                if nome and cpf_visual and tel_visual:
-                    db.cadastrar_cliente(nome, tel_visual, cpf_visual, oficina_id)
-                    st.success("🎉 Cliente cadastrado com sucesso!")
-                    st.rerun()
-
-        st.markdown("### 📋 Seus Clientes Cadastrados")
+            if st.form_submit_button("Salvar Registro") and nome and cpf_visual and tel_visual:
+                db.cadastrar_cliente(nome, tel_visual, cpf_visual, oficina_id)
+                st.success("🎉 Cliente cadastrado com sucesso!")
+                st.rerun()
         lista_c = db.listar_clientes(oficina_id)
         if lista_c: st.dataframe(pd.DataFrame(lista_c)[['nome', 'telefone', 'cpf']], width="stretch", hide_index=True)
-        
     with tab2:
         st.markdown("### 🚗 Vincular Carro ao Cliente")
         clientes = db.listar_clientes(oficina_id)
@@ -91,7 +86,7 @@ elif escolha == "Clientes & Carros":
             op_c = {cl['nome']: cl['id'] for cl in clientes}
             sel_c = st.selectbox("Selecione o Dono do Carro", list(op_c.keys()))
             with st.form("form_veiculo_carro"):
-                ma = st.text_input("Montadora (Ex: Volkswagen, Chevrolet, Fiat)")
+                ma = st.text_input("Montadora")
                 mo = st.text_input("Modelo do Carro")
                 pl = st.text_input("Placa do Carro")
                 ano = st.number_input("Ano Fabricação/Modelo", min_value=1980, value=2026)
@@ -103,18 +98,16 @@ elif escolha == "Clientes & Carros":
         if lista_m: st.dataframe(pd.DataFrame(lista_m), width="stretch")
 
 elif escolha == "Estoque de Peças":
-    st.markdown("### 🗂️ Estoque de Peças Automotivas (Pastilhas, Óleos, Amortecedores)")
+    st.markdown("### 🗂️ Estoque de Peças Automotivas")
     with st.form("form_estoque"):
         n_p = st.text_input("Nome da Peça")
         qtd = st.number_input("Quantidade em Estoque", min_value=0, value=5)
-        c_u = st.number_input("Preço de Custo Distribuidor (R$)", min_value=0.0)
-        v_u = st.number_input("Preço de Venda Cliente (R$)", min_value=0.0)
+        c_u = st.number_input("Preço de Custo (R$)", min_value=0.0)
+        v_u = st.number_input("Preço de Venda (R$)", min_value=0.0)
         if st.form_submit_button("Cadastrar no Almoxarifado") and n_p:
             db.cadastrar_peca_estoque(oficina_id, n_p, qtd, c_u, v_u)
             st.success(f"📦 {n_p} adicionada!")
             st.rerun()
-            
-    st.markdown("#### 📋 Almoxarifado de Peças Ativo")
     pecas = db.listar_pecas_estoque(oficina_id)
     if pecas: st.dataframe(pd.DataFrame(pecas)[['nome_peca', 'quantidade_atual', 'preco_custo', 'preco_venda']], width="stretch", hide_index=True)
 
@@ -137,11 +130,10 @@ elif escolha == "Ordens de Serviço (OS)":
             op_m = {f"{m['modelo']} - Placa: {m['placa']}": m['id'] for m in motos}
             sel_m = st.selectbox("Selecione o Veículo", list(op_m.keys()))
             prob = st.text_area("Relato de Defeito")
-            if st.button("Abrir Ordem de Serviço Automotiva") and prob:
+            if st.button("Abrir OS") and prob:
                 db.criar_ordem_servico(op_m[sel_m], prob)
                 st.success("⚙️ Ordem de Serviço aberta!")
                 st.rerun()
-                
     with t2:
         ordens = db.listar_ordens_servico()
         if ordens:
@@ -150,7 +142,6 @@ elif escolha == "Ordens de Serviço (OS)":
                 sel_os = st.selectbox("Selecione a OS Ativa", list(op_os.keys()))
                 os_obj = op_os[sel_os]
                 dados_reais_os = db.obter_detalhes_completos_os(os_obj['id'])
-                
                 if dados_reais_os:
                     st.markdown("#### 🛠️ Lançar Serviços / Mão de Obra")
                     s_disp = db.listar_servicos(oficina_id)
@@ -160,8 +151,7 @@ elif escolha == "Ordens de Serviço (OS)":
                         if st.button("Lançar Mão de Obra"):
                             db.vincular_servico_na_os(dados_reais_os['os_id'], op_s[s_s]['id'], op_s[s_s]['preco_base'])
                             st.rerun()
-                    
-                    st.markdown("#### 📦 Lançar Componentes e Peças Utilizadas")
+                    st.markdown("#### 📦 Lançar Peças")
                     p_disp = db.listar_pecas_estoque(oficina_id)
                     if p_disp:
                         op_p = {f"{p['nome_peca']} (Qtd: {p['quantidade_atual']} | R$ {p['preco_venda']:.2f})": p for p in p_disp if p['quantidade_atual'] > 0}
@@ -171,20 +161,21 @@ elif escolha == "Ordens de Serviço (OS)":
                             if st.button("Dar Baixa e Vincular Peça"):
                                 db.vincular_peca_na_os(dados_reais_os['os_id'], op_p[s_p]['id'], qtd_p, op_p[s_p]['preco_venda'])
                                 st.rerun()
-
                     st.markdown("### 📋 Resumo Consolidado")
                     if dados_reais_os['servicos']: st.dataframe(pd.DataFrame(dados_reais_os['servicos']), width="stretch")
                     if dados_reais_os['pecas']: st.dataframe(pd.DataFrame(dados_reais_os['pecas']), width="stretch")
                     st.markdown(f"## **Total do Orçamento: R$ {dados_reais_os['total']:.2f}**")
-                    
                     st_list = ["Pendente", "Em Andamento", "Concluído", "Entregue"]
                     novo_st = st.selectbox("Status", st_list, index=st_list.index(dados_reais_os['status']))
                     if st.button("Confirmar Alteração"):
                         db.atualizar_status_os(dados_reais_os['os_id'], novo_st)
                         st.rerun()
-                    
                     st.write("---")
                     col_pdf, col_wpp = st.columns(2)
                     with col_pdf:
                         if st.button("⬇️ Emitir Recibo Oficial PDF", width="stretch"):
-                            path = utils.gerar_pdf_recibo(dados_reais_os["os_id"], "Cliente", "Carro", "PLACA", dados_reais_os["pecas"], dados_reais_os["servicos"], dados_reais_os["total"])
+                            path = utils.gerar_pdf_recibo(dados_reais_os['os_id'], "Cliente", "Carro", "PLACA", dados_reais_os['pecas'], dados_reais_os['servicos'], dados_reais_os['total'])
+                            with open(path, "rb") as f:
+                                st.download_button("Baixar", f, file_name="recibo.pdf", mime="application/pdf")
+                    with col_wpp:
+                        texto_wpp = f"Olá! A manutenção do seu veículo vinculada à OS {dados_reais_os['os_id'][:8]} foi finalizada! 🚗💨"

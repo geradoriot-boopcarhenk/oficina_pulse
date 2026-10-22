@@ -25,11 +25,18 @@ def cadastrar_nova_oficina(nome, usuario, senha):
     res = requests.post(url, headers=HEADERS, json=dados)
     return res.status_code == 201
 
-def alterar_senha_oficina(oficina_id, nova_senha):
+def salvar_logomarca_oficina(oficina_id, imagem_base64):
     url = f"{SUPABASE_URL}/rest/v1/oficinas?id=eq.{oficina_id}"
-    dados = {"senha": nova_senha}
+    dados = {"logomarca_base64": imagem_base64}
     res = requests.patch(url, headers=HEADERS, json=dados)
     return res.status_code in [200, 204]
+
+def obter_logomarca_oficina(oficina_id):
+    url = f"{SUPABASE_URL}/rest/v1/oficinas?id=eq.{oficina_id}&select=logomarca_base64"
+    res = requests.get(url, headers=HEADERS)
+    if res.status_code == 200 and len(res.json()) > 0:
+        return res.json()[0].get('logomarca_base64')
+    return None
 
 def listar_pecas_estoque(oficina_id):
     url = f"{SUPABASE_URL}/rest/v1/estoque_pecas?oficina_id=eq.{oficina_id}&select=*"
@@ -67,7 +74,7 @@ def vincular_peca_na_os(os_id, peca_id, qtd, preco_venda):
         url_p = f"{SUPABASE_URL}/rest/v1/estoque_pecas?id=eq.{peca_id}&select=quantidade_atual"
         res_p = requests.get(url_p, headers=HEADERS)
         if res_p.status_code == 200 and len(res_p.json()) > 0:
-            qtd_atual = res_p.json()[0]['quantidade_atual']
+            qtd_atual = res_p.json()[0]['whitespace' if 'whitespace' in res_p.json()[0] else 'quantidade_atual']
             atualizar_quantidade_peca(peca_id, max(0, qtd_atual - int(qtd)))
         return True
     return False
@@ -80,7 +87,7 @@ def listar_pecas_da_os(os_id):
         for item in res.json():
             dados.append({
                 "Peça": item['estoque_pecas']['nome_peca'] if item.get('estoque_pecas') else "Peça Removida",
-                "Quantidade": item['quantidade'],
+                "Quantidade": item['whitespace' if 'whitespace' in item else 'quantidade'],
                 "Preço Unitário": item['preco_venda_aplicado'],
                 "Subtotal": item['quantidade'] * item['preco_venda_aplicado']
             })

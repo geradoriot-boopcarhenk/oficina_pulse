@@ -4,6 +4,7 @@ import database as db
 import pandas as pd
 import utils
 import urllib.parse
+import base64
 
 st.set_page_config(page_title="Oficina de Motos", page_icon="🏍️", layout="wide")
 
@@ -41,13 +42,19 @@ if not st.session_state["oficina_autenticada"]:
 oficina_id = st.session_state["oficina_autenticada"]["id"]
 nome_oficina_ativa = st.session_state["oficina_autenticada"]["nome_oficina"]
 
-st.sidebar.markdown(f"### 🏢 {nome_oficina_ativa}")
+# --- RENDERIZADOR DA LOGOMARCA RENDERIZADA ---
+logo_data = db.obter_logomarca_oficina(oficina_id)
+if logo_data:
+    st.sidebar.image(f"data:image/png;base64,{logo_data}", use_container_width=True)
+else:
+    st.sidebar.markdown(f"### 🏢 {nome_oficina_ativa}")
+
 if st.sidebar.button("🚪 Sair / Trocar de Conta"):
     st.session_state["oficina_autenticada"] = None
     st.rerun()
 
 st.title(f"🏍️ Gestão Integrada - {nome_oficina_ativa}")
-menu = ["Painel Geral", "Clientes & Motos", "Estoque de Peças", "Serviços", "Ordens de Serviço (OS)"]
+menu = ["Painel Geral", "Clientes & Motos", "Estoque de Peças", "Serviços", "Ordens de Serviço (OS)", "⚙️ Perfil da Oficina"]
 escolha = st.sidebar.selectbox("Mapeamento do Sistema", menu)
 
 if escolha == "Painel Geral":
@@ -171,7 +178,6 @@ elif escolha == "Ordens de Serviço (OS)":
                             with open(path, "rb") as f:
                                 st.download_button("Baixar PDF", f, file_name="recibo.pdf", mime="application/pdf")
                     with col_wpp:
-                        texto_wpp = f"Olá! O veículo cadastrado na OS {dados_reais_os['os_id'][:8]} está pronto!\n\n💰 *Valor Total: R$ {dados_reais_os['total']:.2f}*"
+                        texto_wpp = f"Ola! O veiculo cadastrado na OS {dados_reais_os['os_id'][:8]} esta pronto!\n\n💰 *Valor Total: R$ {dados_reais_os['total']:.2f}*"
                         texto_encoded = urllib.parse.quote(texto_wpp)
                         link_wpp = f"https://whatsapp.com{texto_encoded}"
-                        st.markdown(f'<a href="{link_wpp}" target="_blank"><button style="width:100%; background-color:#25D366; color:white; border:none; padding:10px; border-radius:5px; font-weight:bold; cursor:pointer;">📲 Enviar via WhatsApp</button></a>', unsafe_allow_html=True)
