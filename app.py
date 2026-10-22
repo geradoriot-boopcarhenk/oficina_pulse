@@ -22,7 +22,7 @@ def autenticar(usuario, senha):
 
 # --- SE NÃO ESTIVER LOGADO, EXIBE A TELA DE ACESSO BLINDADA ---
 if not st.session_state["usuario_logado"]:
-    st.markdown("<h1 style='text-align: center; color: #F97316;'>🏍️ Oficina Pulse - Área Restrita</h1>", unsafe_margin=True)
+    st.markdown("<h1 style='text-align: center; color: #F97316;'>🏍️ Oficina Pulse - Área Restrita</h1>", , unsafe_allow_html=True)
     st.write("---")
     
     col_login, _ = st.columns([1, 2])
