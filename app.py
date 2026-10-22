@@ -188,10 +188,8 @@ elif escolha == "Ordens de Serviço (OS)":
                     col_pdf, col_wpp = st.columns(2)
                     with col_pdf:
                         if st.button("⬇️ Gerar Recibo PDF", width="stretch"):
-                            path = utils.gerar_pdf_recibo(dados_reais_os['os_id'], "Cliente", "Veículo", "PLACA", dados_reais_os['pecas'], dados_reais_os['servicos'], dados_reais_os['total'])
-                            with open(path, "rb") as f:
                     with col_wpp:
-                        	texto_wpp = f"Olá! O veículo cadastrado está pronto!\n\n💰 *Valor Total: R$ {dados_reais_os['total']:.2f}*"
-                        	texto_encoded = urllib.parse.quote(texto_wpp)
-                        	link_wpp = f"https://whatsapp.com{texto_encoded}"
-                        	st.markdown(f'<a href="{link_wpp}" target="_blank"><button style="width:100%; background-color:#25D366; color:white; border:none; padding:10px; border-radius:5px; font-weight:bold; cursor:pointer;">📲 Enviar via WhatsApp</button></a>', unsafe_allow_html=True)
+                        texto_wpp = f"Olá! O veículo cadastrado está pronto!\n\n💰 *Valor Total: R$ {dados_reais_os['total']:.2f}*"
+                        texto_encoded = urllib.parse.quote(texto_wpp)
+                        link_wpp = f"https://whatsapp.com{texto_encoded}"
+                        st.markdown(f'<a href="{link_wpp}" target="_blank"><button style="width:100%; background-color:#25D366; color:white; border:none; padding:10px; border-radius:5px; font-weight:bold; cursor:pointer;">📲 Enviar via WhatsApp</button></a>', unsafe_allow_html=True)
