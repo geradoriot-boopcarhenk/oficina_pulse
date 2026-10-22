@@ -5,8 +5,46 @@ import pandas as pd
 import utils
 
 st.set_page_config(page_title="Oficina de Motos", page_icon="🏍️", layout="wide")
-st.session_state["usuario_logado"] = True
 
+# --- GERENCIADOR DE LOGIN COM SEGURANÇA ---
+if "usuario_logado" not in st.session_state:
+    st.session_state["usuario_logado"] = False
+
+def autenticar(usuario, senha):
+    # LOGIN COMERCIAL PADRÃO (Você pode mudar estes dados quando quiser!)
+    USUARIO_CORRETO = "admin"
+    SENHA_CORRETA = "pulse2026"
+    
+    if usuario == USUARIO_CORRETO and senha == SENHA_CORRETA:
+        st.session_state["usuario_logado"] = True
+        return True
+    return False
+
+# --- SE NÃO ESTIVER LOGADO, EXIBE A TELA DE ACESSO BLINDADA ---
+if not st.session_state["usuario_logado"]:
+    st.markdown("<h1 style='text-align: center; color: #F97316;'>🏍️ Oficina Pulse - Área Restrita</h1>", unsafe_margin=True)
+    st.write("---")
+    
+    col_login, _ = st.columns([1, 2])
+    with col_login:
+        st.markdown("### 🔑 Faça login para acessar o sistema")
+        usuario_input = st.text_input("Usuário de Acesso")
+        senha_input = st.text_input("Senha Comercial", type="password")
+        
+        if st.button("Entrar no Painel", width="stretch"):
+            if autenticar(usuario_input, senha_input):
+                st.success("Acesso concedido com sucesso!")
+                st.rerun()
+            else:
+                st.error("❌ Usuário ou senha incorretos! Verifique os dados.")
+    st.stop() # Bloqueia o carregamento do restante da página se não logar
+
+# --- BOTÃO DE LOGOUT NA BARRA LATERAL SE ESTIVER LOGADO ---
+if st.sidebar.button("🚪 Sair do Sistema"):
+    st.session_state["usuario_logado"] = False
+    st.rerun()
+
+# --- CONTINUAÇÃO NORMAL DO APLICATIVO APÓS LOGIN AUTORIZADO ---
 st.title("🏍️ Sistema de Gestão - Oficina de Motos")
 
 menu = ["Painel Geral", "Clientes & Motos", "Serviços", "Ordens de Serviço (OS)"]
@@ -29,7 +67,7 @@ elif escolha == "Clientes & Motos":
             nome = st.text_input("Nome", value="Carlos Henrique")
             cpf_visual = st.text_input("CPF", value="617.923.303-91")
             tel_visual = st.text_input("Telefone com DDD", value="(85) 99282-4395")
-            botao_salvar = st.form_submit_button("Salvar Registro de Cliente", use_container_width=True)
+            botao_salvar = st.form_submit_button("Salvar Registro de Cliente", width="stretch")
             
         if botao_salvar:
             if nome and cpf_visual and tel_visual:
@@ -43,7 +81,7 @@ elif escolha == "Clientes & Motos":
             df_clientes = pd.DataFrame(lista_c)
             if 'created_at' in df_clientes.columns: df_clientes = df_clientes.drop(columns=['created_at'])
             df_clientes = df_clientes[['id', 'nome', 'telefone', 'cpf']]
-            st.dataframe(df_clientes, use_container_width=True, hide_index=True)
+            st.dataframe(df_clientes, width="stretch", hide_index=True)
         else:
             st.info("Nenhum cliente listado na tabela ainda.")
         
@@ -64,7 +102,7 @@ elif escolha == "Clientes & Motos":
             pl = st.text_input("Placa", value="MOTO123")
             ano = st.number_input("Ano", min_value=1980, value=2026)
             
-            if st.form_submit_button("Salvar Registro de Moto", use_container_width=True):
+            if st.form_submit_button("Salvar Registro de Moto", width="stretch"):
                 if cliente_id_final and ma and mo and pl:
                     db.cadastrar_moto(cliente_id_final, ma, mo, pl.upper(), ano)
                     st.success(f"✅ Moto {mo} vinculada com sucesso!")
@@ -72,7 +110,7 @@ elif escolha == "Clientes & Motos":
                     
         st.markdown("### 📋 Lista de Motos Registradas")
         lista_m = db.listar_motos()
-        if lista_m: st.dataframe(pd.DataFrame(lista_m), use_container_width=True)
+        if lista_m: st.dataframe(pd.DataFrame(lista_m), width="stretch")
         else: st.info("Nenhuma moto cadastrada ainda.")
 
 elif escolha == "Serviços":
@@ -89,7 +127,7 @@ elif escolha == "Serviços":
     if lista_s and len(lista_s) > 0:
         df_servicos = pd.DataFrame(lista_s)
         if 'created_at' in df_servicos.columns: df_servicos = df_servicos.drop(columns=['created_at'])
-        st.dataframe(df_servicos, use_container_width=True, hide_index=True)
+        st.dataframe(df_servicos, width="stretch", hide_index=True)
     else:
         st.info("Nenhum serviço cadastrado ainda.")
 
@@ -136,10 +174,9 @@ elif escolha == "Ordens de Serviço (OS)":
                     novo_st = st.selectbox("Status Atual da OS", st_list, index=st_list.index(dados_reais_os['status']))
                     if st.button("Confirmar Atualização de Status", width="stretch"):
                         db.atualizar_status_os(dados_reais_os['os_id'], novo_st)
-                        st.success(f"Status atualizado para {novo_st}!")
+                        st.success(f"Status updated to {novo_st}!")
                         st.rerun()
                     
-                    # O BLOCO DO PDF AGORA ESTÁ COM O RECUO DE ESPAÇOS PERFEITO NO PYTHON
                     if st.button("⬇️ Gerar Recibo da OS (PDF)", width="stretch"):
                         path = utils.gerar_pdf_recibo(dados_reais_os['os_id'], "Carlos Henrique", "BMW S1000RR", "MOTO123", [], dados_reais_os['servicos'], dados_reais_os['total'])
                         with open(path, "rb") as f:
