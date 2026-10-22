@@ -187,3 +187,4 @@ elif escolha == "Ordens de Serviço (OS)":
                     col_pdf, col_wpp = st.columns(2)
                     with col_pdf:
                         if st.button("⬇️ Emitir Recibo Oficial PDF", width="stretch"):
+                            path = utils.gerar_pdf_recibo(dados_reais_os["os_id"], "Cliente", "Carro", "PLACA", dados_reais_os["pecas"], dados_reais_os["servicos"], dados_reais_os["total"])

@@ -57,7 +57,7 @@ st.title(f"🏍️ Gestão Integrada - {nome_oficina_ativa}")
 menu = ["Painel Geral", "Clientes & Motos", "Estoque de Peças", "Serviços", "Ordens de Serviço (OS)"]
 escolha = st.sidebar.selectbox("Mapeamento do Sistema", menu)
 
-if选择 == "Painel Geral":
+if escolha == "Painel Geral":
     col1, col2 = st.columns(2)
     col1.metric("OS Ativas", db.contar_os_por_status("Pendente") + db.contar_os_por_status("Em Andamento"))
     col2.metric("Faturamento Acumulado", f"R$ {db.obter_totais_financeiros():,.2f}")
