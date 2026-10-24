@@ -2,7 +2,7 @@
 import requests
 import pandas as pd
 
-SUPABASE_URL = "https://aunpwrjbvpvtccznwrqs.supabase.co"
+SUPABASE_URL = "https://iypimnjrwwwxppaygywt.supabase.co"
 SUPABASE_KEY = "sb_publishable_nrVu4x2XZmss8FliB6yZ3738SgscwXjT6Hj9pA9qDhc8b5VbY7H8m1N2"
 
 HEADERS = {
