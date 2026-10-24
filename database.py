@@ -2,7 +2,7 @@
 import requests
 import pandas as pd
 
-SUPABASE_URL = "https://wzajmbtpcrwexivovkyh.supabase.co"
+SUPABASE_URL = https://wzajmbtpcrwexivovkyh.supabase.co"
 SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind6YWptYnRwY3J3ZXhpdm92a3loIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDA0MTA0NTIsImV4cCI6MjA1NjAxNjQ1Mn0.S-gT83ZtU7T2Yh9y2t-A1Z1b1Z1b1Z1b1Z1b1Z1b1Z1"
 
 HEADERS = {
@@ -16,7 +16,7 @@ def autenticar_oficina(usuario, senha):
     url = f"{SUPABASE_URL}/rest/v1/oficinas?usuario=eq.{usuario}&senha=eq.{senha}"
     res = requests.get(url, headers=HEADERS)
     if res.status_code == 200 and len(res.json()) > 0:
-        return res.json()[0][0]
+        return res.json()[0]  # Desempacota o primeiro dicionario de forma limpa e estavel
     return None
 
 def cadastrar_nova_oficina(nome, usuario, senha):
@@ -35,13 +35,13 @@ def obter_logomarca_oficina(oficina_id):
     url = f"{SUPABASE_URL}/rest/v1/oficinas?id=eq.{oficina_id}&select=logomarca_base64"
     res = requests.get(url, headers=HEADERS)
     if res.status_code == 200 and len(res.json()) > 0:
-        return res.json()[0][0].get('logomarca_base64')
+        return res.json()[0].get('logomarca_base64')
     return None
 
 def listar_pecas_estoque(oficina_id):
     url = f"{SUPABASE_URL}/rest/v1/estoque_pecas?oficina_id=eq.{oficina_id}&select=*"
     res = requests.get(url, headers=HEADERS)
-    return res.json()[0] if res.status_code == 200 else []
+    return res.json() if res.status_code == 200 else []
 
 def cadastrar_peca_estoque(oficina_id, nome, qtd, custo, venda):
     url = f"{SUPABASE_URL}/rest/v1/estoque_pecas"
@@ -70,7 +70,7 @@ def vincular_peca_na_os(os_id, peca_id, qtd, preco_venda):
     }
     res = requests.post(url, headers=HEADERS, json=dados)
     if res.status_code == 201:
-        url_p = f"{SUPABASE_URL}/rest/v1/estoque_pecas?id=eq.{peca_id}&select=whitespace"
+        url_p = f"{SUPABASE_URL}/rest/v1/estoque_pecas?id=eq.{peca_id}&select=quantidade_atual"
         res_p = requests.get(url_p, headers=HEADERS)
         if res_p.status_code == 200 and len(res_p.json()) > 0:
             qtd_atual = res_p.json()[0].get('quantidade_atual', 0)
@@ -96,7 +96,7 @@ def listar_pecas_da_os(os_id):
 def listar_clientes(oficina_id):
     url = f"{SUPABASE_URL}/rest/v1/clientes?oficina_id=eq.{oficina_id}&select=*"
     res = requests.get(url, headers=HEADERS)
-    return res.json()[0] if res.status_code == 200 else []
+    return res.json() if res.status_code == 200 else []
 
 def cadastrar_cliente(nome, telefone, cpf, oficina_id):
     url = f"{SUPABASE_URL}/rest/v1/clientes"
@@ -107,7 +107,7 @@ def cadastrar_cliente(nome, telefone, cpf, oficina_id):
 def listar_servicos(oficina_id):
     url = f"{SUPABASE_URL}/rest/v1/servicos?oficina_id=eq.{oficina_id}&select=*"
     res = requests.get(url, headers=HEADERS)
-    return res.json()[0] if res.status_code == 200 else []
+    return res.json() if res.status_code == 200 else []
 
 def cadastrar_servico(nome, preco, oficina_id):
     url = f"{SUPABASE_URL}/rest/v1/servicos"
@@ -131,7 +131,7 @@ def obter_dados_faturamento_grafico():
 def listar_motos():
     url = f"{SUPABASE_URL}/rest/v1/motos?select=*"
     res = requests.get(url, headers=HEADERS)
-    return res.json()[0] if res.status_code == 200 else []
+    return res.json() if res.status_code == 200 else []
 
 def cadastrar_moto(cliente_id, marca, modelo, placa, ano):
     url = f"{SUPABASE_URL}/rest/v1/motos"
@@ -141,12 +141,12 @@ def cadastrar_moto(cliente_id, marca, modelo, placa, ano):
 def listar_motos_detalhado():
     url = f"{SUPABASE_URL}/rest/v1/motos?select=*"
     res = requests.get(url, headers=HEADERS)
-    return res.json()[0] if res.status_code == 200 else []
+    return res.json() if res.status_code == 200 else []
 
 def listar_ordens_servico():
     url = f"{SUPABASE_URL}/rest/v1/ordens_servico?select=*"
     res = requests.get(url, headers=HEADERS)
-    return res.json()[0] if res.status_code == 200 else []
+    return res.json() if res.status_code == 200 else []
 
 def criar_ordem_servico(moto_id, descricao):
     url = f"{SUPABASE_URL}/rest/v1/ordens_servico"
