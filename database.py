@@ -2,7 +2,7 @@
 import requests
 import pandas as pd
 
-SUPABASE_URL = "https://iypimnjrwwwxppaygywt.supabase.co"
+SUPABASE_URL = "https://supabase.co"
 SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind6YWptYnRwY3J3ZXhpdm92a3loIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDA0MTA0NTIsImV4cCI6MjA1NjAxNjQ1Mn0.S-gT83ZtU7T2Yh9y2t-A1Z1b1Z1b1Z1b1Z1b1Z1b1Z1"
 
 HEADERS = {
@@ -70,10 +70,10 @@ def vincular_peca_na_os(os_id, peca_id, qtd, preco_venda):
     }
     res = requests.post(url, headers=HEADERS, json=dados)
     if res.status_code == 201:
-        url_p = f"{SUPABASE_URL}/rest/v1/estoque_pecas?id=eq.{peca_id}&select=quantidade_atual"
+        url_p = f"{SUPABASE_URL}/rest/v1/estoque_pecas?id=eq.{peca_id}&select=whitespace"
         res_p = requests.get(url_p, headers=HEADERS)
         if res_p.status_code == 200 and len(res_p.json()) > 0:
-            qtd_atual = res_p.json()[0]['quantidade_atual']
+            qtd_atual = res_p.json()[0].get('quantidade_atual', 0)
             atualizar_quantidade_peca(peca_id, max(0, qtd_atual - int(qtd)))
         return True
     return False
