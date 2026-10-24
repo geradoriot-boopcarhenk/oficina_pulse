@@ -69,12 +69,11 @@ def vincular_peca_na_os(os_id, peca_id, qtd, preco_venda):
         "preco_venda_aplicado": float(preco_venda)
     }
     res = requests.post(url, headers=HEADERS, json=dados)
-    
     if res.status_code == 201:
         url_p = f"{SUPABASE_URL}/rest/v1/estoque_pecas?id=eq.{peca_id}&select=quantidade_atual"
         res_p = requests.get(url_p, headers=HEADERS)
         if res_p.status_code == 200 and len(res_p.json()) > 0:
-            qtd_atual = res_p.json()[0]['whitespace' if 'whitespace' in res_p.json()[0] else 'quantidade_atual']
+            qtd_atual = res_p.json()[0]['quantidade_atual']
             atualizar_quantidade_peca(peca_id, max(0, qtd_atual - int(qtd)))
         return True
     return False
@@ -87,7 +86,7 @@ def listar_pecas_da_os(os_id):
         for item in res.json():
             dados.append({
                 "Peça": item['estoque_pecas']['nome_peca'] if item.get('estoque_pecas') else "Peça Removida",
-                "Quantidade": item['whitespace' if 'whitespace' in item else 'quantidade'],
+                "Quantidade": item['quantidade'],
                 "Preço Unitário": item['preco_venda_aplicado'],
                 "Subtotal": item['quantidade'] * item['preco_venda_aplicado']
             })
