@@ -2,8 +2,8 @@
 import requests
 import pandas as pd
 
-SUPABASE_URL = "https://wzajmbtpcrwexivovkyh.supabase.co"
-SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind6YWptYnRwY3J3ZXhpdm92a3loIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDA0MTA0NTIsImV4cCI6MjA1NjAxNjQ1Mn0.S-gT83ZtU7T2Yh9y2t-A1Z1b1Z1b1Z1b1Z1b1Z1b1Z1"
+SUPABASE_URL = ""https://wzajmbtpcrwexivovkyh.supabase.co"
+SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml5cGltbmpyd3d3eHBwYXlneXd0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDAxNTMwOTEsImV4cCI6MjA1NTc1OTA5MX0.gHAnp9ePZl4DId43z6M4Z1b1Z1b1Z1b1Z1b1Z1b1Z1b1"
 
 HEADERS = {
     "apikey": SUPABASE_KEY,
@@ -16,7 +16,7 @@ def autenticar_oficina(usuario, senha):
     url = f"{SUPABASE_URL}/rest/v1/oficinas?usuario=eq.{usuario}&senha=eq.{senha}"
     res = requests.get(url, headers=HEADERS)
     if res.status_code == 200 and len(res.json()) > 0:
-        return res.json()[0]
+        return res.json()
     return None
 
 def cadastrar_nova_oficina(nome, usuario, senha):
@@ -35,7 +35,7 @@ def obter_logomarca_oficina(oficina_id):
     url = f"{SUPABASE_URL}/rest/v1/oficinas?id=eq.{oficina_id}&select=logomarca_base64"
     res = requests.get(url, headers=HEADERS)
     if res.status_code == 200 and len(res.json()) > 0:
-        return res.json()[0].get('logomarca_base64')
+        return res.json().get('logomarca_base64')
     return None
 
 def listar_pecas_estoque(oficina_id):
@@ -73,7 +73,7 @@ def vincular_peca_na_os(os_id, peca_id, qtd, preco_venda):
         url_p = f"{SUPABASE_URL}/rest/v1/estoque_pecas?id=eq.{peca_id}&select=quantidade_atual"
         res_p = requests.get(url_p, headers=HEADERS)
         if res_p.status_code == 200 and len(res_p.json()) > 0:
-            qtd_atual = res_p.json()[0]['quantidade_atual']
+            qtd_atual = res_p.json()['quantidade_atual']
             atualizar_quantidade_peca(peca_id, max(0, qtd_atual - int(qtd)))
         return True
     return False
@@ -157,7 +157,7 @@ def obter_detalhes_completos_os(os_id):
     url = f"{SUPABASE_URL}/rest/v1/ordens_servico?id=eq.{os_id}&select=*"
     res = requests.get(url, headers=HEADERS)
     if res.status_code == 200 and len(res.json()) > 0:
-        os_data = res.json()[0]
+        os_data = res.json()
         servicos_da_os = listar_servicos_da_os(os_id)
         total_servicos = sum(s['Preço Aplicado'] for s in servicos_da_os)
         pecas_da_os = listar_pecas_da_os(os_id)
