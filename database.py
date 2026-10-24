@@ -16,7 +16,7 @@ def autenticar_oficina(usuario, senha):
     url = f"{SUPABASE_URL}/rest/v1/oficinas?usuario=eq.{usuario}&senha=eq.{senha}"
     res = requests.get(url, headers=HEADERS)
     if res.status_code == 200 and len(res.json()) > 0:
-        return res.json()[0]
+        return res.json()[0][0]
     return None
 
 def cadastrar_nova_oficina(nome, usuario, senha):
@@ -35,13 +35,13 @@ def obter_logomarca_oficina(oficina_id):
     url = f"{SUPABASE_URL}/rest/v1/oficinas?id=eq.{oficina_id}&select=logomarca_base64"
     res = requests.get(url, headers=HEADERS)
     if res.status_code == 200 and len(res.json()) > 0:
-        return res.json()[0].get('logomarca_base64')
+        return res.json()[0][0].get('logomarca_base64')
     return None
 
 def listar_pecas_estoque(oficina_id):
     url = f"{SUPABASE_URL}/rest/v1/estoque_pecas?oficina_id=eq.{oficina_id}&select=*"
     res = requests.get(url, headers=HEADERS)
-    return res.json() if res.status_code == 200 else []
+    return res.json()[0] if res.status_code == 200 else []
 
 def cadastrar_peca_estoque(oficina_id, nome, qtd, custo, venda):
     url = f"{SUPABASE_URL}/rest/v1/estoque_pecas"
@@ -96,7 +96,7 @@ def listar_pecas_da_os(os_id):
 def listar_clientes(oficina_id):
     url = f"{SUPABASE_URL}/rest/v1/clientes?oficina_id=eq.{oficina_id}&select=*"
     res = requests.get(url, headers=HEADERS)
-    return res.json() if res.status_code == 200 else []
+    return res.json()[0] if res.status_code == 200 else []
 
 def cadastrar_cliente(nome, telefone, cpf, oficina_id):
     url = f"{SUPABASE_URL}/rest/v1/clientes"
@@ -107,7 +107,7 @@ def cadastrar_cliente(nome, telefone, cpf, oficina_id):
 def listar_servicos(oficina_id):
     url = f"{SUPABASE_URL}/rest/v1/servicos?oficina_id=eq.{oficina_id}&select=*"
     res = requests.get(url, headers=HEADERS)
-    return res.json() if res.status_code == 200 else []
+    return res.json()[0] if res.status_code == 200 else []
 
 def cadastrar_servico(nome, preco, oficina_id):
     url = f"{SUPABASE_URL}/rest/v1/servicos"
@@ -131,7 +131,7 @@ def obter_dados_faturamento_grafico():
 def listar_motos():
     url = f"{SUPABASE_URL}/rest/v1/motos?select=*"
     res = requests.get(url, headers=HEADERS)
-    return res.json() if res.status_code == 200 else []
+    return res.json()[0] if res.status_code == 200 else []
 
 def cadastrar_moto(cliente_id, marca, modelo, placa, ano):
     url = f"{SUPABASE_URL}/rest/v1/motos"
@@ -141,12 +141,12 @@ def cadastrar_moto(cliente_id, marca, modelo, placa, ano):
 def listar_motos_detalhado():
     url = f"{SUPABASE_URL}/rest/v1/motos?select=*"
     res = requests.get(url, headers=HEADERS)
-    return res.json() if res.status_code == 200 else []
+    return res.json()[0] if res.status_code == 200 else []
 
 def listar_ordens_servico():
     url = f"{SUPABASE_URL}/rest/v1/ordens_servico?select=*"
     res = requests.get(url, headers=HEADERS)
-    return res.json() if res.status_code == 200 else []
+    return res.json()[0] if res.status_code == 200 else []
 
 def criar_ordem_servico(moto_id, descricao):
     url = f"{SUPABASE_URL}/rest/v1/ordens_servico"
