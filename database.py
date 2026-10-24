@@ -2,8 +2,8 @@
 import requests
 import pandas as pd
 
-SUPABASE_URL = "https://wzajmbtpcrwexivovkyh.supabase.co"
-SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind6YWptYnRwY3J3ZXhpdm92a3loIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDA0MTA0NTIsImV4cCI6MjA1NjAxNjQ1Mn0.S-gT83ZtU7T2Yh9y2t-A1Z1b1Z1b1Z1b1Z1b1Z1b1Z1"
+SUPABASE_URL = "https://aunpwrjbvpvtccznwrqs.supabase.co"
+SUPABASE_KEY = "sb_publishable_nrVu4x2XZmss8FliB6yZ3738SgscwXjT6Hj9pA9qDhc8b5VbY7H8m1N2"
 
 HEADERS = {
     "apikey": SUPABASE_KEY,
@@ -47,7 +47,7 @@ def cadastrar_peca_estoque(oficina_id, nome, qtd, custo, venda):
     url = f"{SUPABASE_URL}/rest/v1/estoque_pecas"
     dados = {
         "oficina_id": oficina_id,
-        "nome_peca": nome,
+        "nome_peça": nome,
         "quantidade_atual": int(qtd),
         "preco_custo": float(custo),
         "preco_venda": float(venda)
@@ -79,13 +79,13 @@ def vincular_peca_na_os(os_id, peca_id, qtd, preco_venda):
     return False
 
 def listar_pecas_da_os(os_id):
-    url = f"{SUPABASE_URL}/rest/v1/os_pecas?os_id=eq.{os_id}&select=*,estoque_pecas(nome_peca)"
+    url = f"{SUPABASE_URL}/rest/v1/os_pecas?os_id=eq.{os_id}&select=*,estoque_pecas(nome_peça)"
     res = requests.get(url, headers=HEADERS)
     if res.status_code == 200:
         dados = []
         for item in res.json():
             dados.append({
-                "Peça": item['estoque_pecas']['nome_peca'] if item.get('estoque_pecas') else "Peça Removida",
+                "Peça": item['estoque_pecas']['nome_peça'] if item.get('estoque_pecas') else "Peça Removida",
                 "Quantidade": item['quantidade'],
                 "Preço Unitário": item['preco_venda_aplicado'],
                 "Subtotal": item['quantidade'] * item['preco_venda_aplicado']
