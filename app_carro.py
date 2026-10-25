@@ -115,32 +115,58 @@ elif escolha == "Estoque de Peças":
     if pecas: st.dataframe(pd.DataFrame(pecas)[['nome_peça', 'whitespace', 'preco_custo', 'preco_venda']], width="stretch", hide_index=True)
 
 elif escolha == "📋 Ordens de Serviço (OS)":
-    st.markdown("### 📋 Módulo de Ordens de Serviço e Mão de Obra")
+    st.markdown("### 📋 Módulo de Ordens de Serviço e Orçamentos Comerciais")
     st.write("---")
     
     lista_c = db.listar_clientes(oficina_id)
+    pecas_estoque = db.listar_pecas_estoque(oficina_id)
+    
     if not lista_c:
         st.warning("⚠️ Cadastre pelo menos um Cliente antes de abrir uma Ordem de Serviço.")
     else:
-        st.markdown("#### 🛠️ Abrir Nova Ordem de Serviço")
+        st.markdown("#### 🛠️ Abrir Nova Ordem de Serviço com Peças")
         with st.form("form_os", clear_on_submit=True):
             dict_clientes = {c['nome']: c['id'] for c in lista_c}
             cliente_selecionado = st.selectbox("Selecione o Proprietário", list(dict_clientes.keys()))
-            descricao_problema = st.text_area("Descrição dos Serviços / Problema Relatado")
-            valor_mao_de_obra = st.number_input("Valor da Mão de Obra / Serviço (R$)", min_value=0.0, value=0.0)
+            descricao_problema = st.text_area("Descrição dos Serviços / Defeito")
+            
+            # Seletor dinamico de pecas vindas do estoque ativo
+            if pecas_estoque:
+                dict_pecas = {p['nome_peça']: p for p in pecas_estoque}
+                peca_selecionada = st.selectbox("Vincular Peça do Estoque (Opcional)", ["Nenhuma"] + list(dict_pecas.keys()))
+                qtd_peca = st.number_input("Quantidade da Peça utilizada", min_value=1, value=1)
+            else:
+                st.info("💡 Nenhum produto cadastrado no Estoque de Peças ainda.")
+                peca_selecionada = "Nenhuma"
+                qtd_peca = 0
+                
+            valor_mao_de_obra = st.number_input("Valor da Mão de Obra / Serviço (R$)", min_value=0.0, value=100.0)
             
             if st.form_submit_button("Gerar Nova OS"):
                 if descricao_problema:
-                    db.criar_ordem_servico(dict_clientes[cliente_selecionado], descricao_problema, valor_mao_de_obra)
-                    st.success("✅ Ordem de Serviço registrada com sucesso!")
+                    total_pecas_calculado = 0.0
+                    detalhe_peca_texto = ""
+                    
+                    if peca_selecionada != "Nenhuma":
+                        p_dados = dict_pecas[peca_selecionada]
+                        total_pecas_calculado = float(p_dados['preco_venda']) * qtd_peca
+                        detalhe_peca_texto = f" + Peça: {peca_selecionada} (x{qtd_peca})"
+                    
+                    valor_total_os = valor_mao_de_obra + total_pecas_calculado
+                    descricao_final = f"{descricao_problema}{detalhe_peca_texto}"
+                    
+                    db.criar_ordem_servico(dict_clientes[cliente_selecionado], descricao_final, valor_total_os)
+                    st.success(f"✅ OS Registrada! Valor Total do Orçamento: R$ {valor_total_os:,.2f}")
                     st.rerun()
+                else:
+                    st.error("⚠️ Insira a descrição do problema!")
         
         st.write("---")
         st.markdown("#### 📋 Histórico de Ordens de Serviço Ativas")
         lista_os = db.listar_ordens_servico()
         if lista_os:
             for os_item in lista_os:
-                c1, c2, c3 = st.columns([2, 4, 2])
+                c1, c2, c3 = st.columns([1, 2, 1])
                 nome_c = os_item.get('clientes', {}).get('nome', 'Cliente') if os_item.get('clientes') else "Proprietário"
                 c1.write(f"👤 **{nome_c}**")
                 c2.write(f"📄 {os_item['descricao_problema']}")
