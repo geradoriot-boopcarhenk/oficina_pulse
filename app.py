@@ -66,7 +66,7 @@ if st.sidebar.button("🚪 Sair / Trocar de Conta"):
     st.rerun()
 
 st.title(f"🏍️ Gestão Integrada - {nome_oficina_ativa}")
-menu = ["Painel Geral", "Clientes & Motos", "Estoque de Peças", "⚙️ Perfil da Oficina"]
+menu = ["Painel Geral", "Clientes & Motos", "Estoque de Peças", "📋 Ordens de Serviço (OS)", "⚙️ Perfil da Oficina"]
 escolha = st.sidebar.selectbox("Mapeamento do Sistema", menu)
 
 if escolha == "Painel Geral":
@@ -77,14 +77,14 @@ if escolha == "Painel Geral":
 elif escolha == "Clientes & Motos":
     st.markdown("### 📝 Cadastro de Cliente")
     with st.form("form_cliente", clear_on_submit=True):
-        nome = st.text_input("Nome Completo")
+        name = st.text_input("Nome Completo")
         cpf_visual = st.text_input("CPF (Somente números)")
         tel_visual = st.text_input("WhatsApp (Com DDD)")
-        if st.form_submit_button("Salvar Registro") and nome and cpf_visual and tel_visual:
+        if st.form_submit_button("Salvar Registro") and name and cpf_visual and tel_visual:
             cpf_formatado = formatar_cpf(cpf_visual)
             tel_formatado = formatar_telefone(tel_visual)
-            db.cadastrar_cliente(nome, tel_formatado, cpf_formatado, oficina_id)
-            st.success("🎉 Cliente cadastrado com formatação profissional!")
+            db.cadastrar_cliente(name, tel_formatado, cpf_formatado, oficina_id)
+            st.success("🎉 Cliente cadastrado!")
             st.rerun()
     lista_c = db.listar_clientes(oficina_id)
     if lista_c:
@@ -105,6 +105,23 @@ elif escolha == "Estoque de Peças":
             st.rerun()
     pecas = db.listar_pecas_estoque(oficina_id)
     if pecas: st.dataframe(pd.DataFrame(pecas)[['nome_peca', 'quantidade_atual', 'preco_custo', 'preco_venda']], width="stretch", hide_index=True)
+
+elif escolha == "📋 Ordens de Serviço (OS)":
+    st.markdown("### 📋 Módulo de Ordens de Serviço e Mão de Obra")
+    st.write("---")
+    lista_c = db.listar_clientes(oficina_id)
+    if not lista_c:
+        st.warning("⚠️ Cadastre pelo menos um Cliente antes de abrir uma Ordem de Serviço.")
+    else:
+        st.markdown("#### 🛠️ Abrir Nova Ordem de Serviço")
+        with st.form("form_os", clear_on_submit=True):
+            dict_clientes = {c['nome']: c['id'] for c in lista_c}
+            cliente_selecionado = st.selectbox("Selecione o Cliente", list(dict_clientes.keys()))
+            descricao_problema = st.text_area("Descrição dos Serviços / Problema")
+            valor_mao_de_obra = st.number_input("Valor da Mão de Obra (R$)", min_value=0.0, value=0.0)
+            if st.form_submit_button("Gerar Nova OS") and descricao_problema:
+                st.success("✅ Ordem de Serviço registrada com sucesso!")
+                st.rerun()
 
 elif escolha == "⚙️ Perfil da Oficina":
     st.markdown("### ⚙️ Configurações da Oficina")

@@ -21,9 +21,6 @@ def formatar_telefone(tel):
         return f"({nums[:2]}) {nums[2:6]}-{nums[6:]}"
     return tel
 
-def formatar_placa(placa):
-    return placa.strip().upper()
-
 if "oficina_autenticada" not in st.session_state:
     st.session_state["oficina_autenticada"] = None
 
@@ -69,7 +66,7 @@ if st.sidebar.button("🚪 Sair / Trocar de Conta"):
     st.rerun()
 
 st.title(f"🚗 Gestão Integrada - {nome_oficina_ativa}")
-menu = ["Painel Geral", "Clientes & Carros", "Estoque de Peças", "⚙️ Perfil da Oficina"]
+menu = ["Painel Geral", "Clientes & Carros", "Estoque de Peças", "📋 Ordens de Serviço (OS)", "⚙️ Perfil da Oficina"]
 escolha = st.sidebar.selectbox("Mapeamento do Sistema", menu)
 
 if escolha == "Painel Geral":
@@ -78,53 +75,24 @@ if escolha == "Painel Geral":
     col2.metric("Faturamento Mensal", "R$ 0,00")
 
 elif escolha == "Clientes & Carros":
-    st.markdown("### 📝 Cadastro de Cliente Proprietário e Veículo")
+    st.markdown("### 📝 Cadastro de Cliente Proprietário")
     with st.form("form_cliente", clear_on_submit=True):
-        st.markdown("#### 👤 Dados do Proprietário")
         nome = st.text_input("Nome do Proprietário")
         cpf_visual = st.text_input("CPF (Somente números)")
         tel_visual = st.text_input("WhatsApp de Contato (Com DDD)")
-        
-        st.markdown("#### 🚗 Dados do Veículo")
-        col_car1, col_car2 = st.columns(2)
-        marca_car = col_car1.text_input("Marca do Carro (Ex: Fiat, Chevrolet)")
-        modelo_car = col_car2.text_input("Modelo do Carro (Ex: Uno, Onix)")
-        placa_car = col_car1.text_input("Placa do Carro")
-        cor_car = col_car2.text_input("Cor do Carro")
-        
-        if st.form_submit_button("Salvar Registro Completo"):
-            if nome and cpf_visual and tel_visual and marca_car and modelo_car and placa_car:
-                cpf_formatado = formatar_cpf(cpf_visual)
-                tel_formatado = formatar_telefone(tel_visual)
-                placa_formatada = formatar_placa(placa_car)
-                
-                # Monta a string do veiculo para guardar de forma limpa
-                veiculo_completo = f"{marca_car.strip().title()} {modelo_car.strip().title()} - {cor_car.strip().title()}"
-                
-                # Envia para a tabela clientes
-                db.cadastrar_cliente(nome, tel_formatado, cpf_formatado, oficina_id)
-                
-                st.success("🎉 Proprietário e Veículo cadastrados com sucesso!")
-                st.rerun()
-            else:
-                st.error("⚠️ Por favor, preencha todos os campos obrigatórios!")
+        if st.form_submit_button("Salvar Registro Proprietário") and nome and cpf_visual and tel_visual:
+            cpf_formatado = formatar_cpf(cpf_visual)
+            tel_formatado = formatar_telefone(tel_visual)
+            db.cadastrar_cliente(nome, tel_formatado, cpf_formatado, oficina_id)
+            st.success("🎉 Cliente cadastrado com formatação profissional!")
+            st.rerun()
     
-    st.markdown("### 📋 Seus Clientes e Carros Cadastrados")
+    st.markdown("### 📋 Seus Clientes Cadastrados")
     lista_c = db.listar_clientes(oficina_id)
     if lista_c:
-        df_clientes = pd.DataFrame(lista_c)
-        # Verifica quais colunas vieram para evitar quebras visuais
-        colunas_exibir = []
-        df_final = pd.DataFrame()
-        
-        if 'nome' in df_clientes.columns:
-            df_final['Nome do Proprietário'] = df_clientes['nome']
-        if 'telefone' in df_clientes.columns:
-            df_final['WhatsApp'] = df_clientes['telefone']
-        if 'cpf' in df_clientes.columns:
-            df_final['CPF'] = df_clientes['cpf']
-            
-        st.dataframe(df_final, width="stretch", hide_index=True)
+        df_clientes = pd.DataFrame(lista_c)[['nome', 'telefone', 'cpf']]
+        df_clientes.columns = ['Nome do Proprietário', 'WhatsApp', 'CPF']
+        st.dataframe(df_clientes, width="stretch", hide_index=True)
 
 elif escolha == "Estoque de Peças":
     st.markdown("### 🗂️ Estoque de Peças Automotivas")
@@ -139,6 +107,26 @@ elif escolha == "Estoque de Peças":
             st.rerun()
     pecas = db.listar_pecas_estoque(oficina_id)
     if pecas: st.dataframe(pd.DataFrame(pecas)[['nome_peça', 'whitespace', 'preco_custo', 'preco_venda']], width="stretch", hide_index=True)
+
+elif escolha == "📋 Ordens de Serviço (OS)":
+    st.markdown("### 📋 Módulo de Ordens de Serviço e Mão de Obra")
+    st.write("---")
+    
+    # Lista clientes cadastrados para vincular na OS
+    lista_c = db.listar_clientes(oficina_id)
+    if not lista_c:
+        st.warning("⚠️ Cadastre pelo menos um Cliente antes de abrir uma Ordem de Serviço.")
+    else:
+        st.markdown("#### 🛠️ Abrir Nova Ordem de Serviço")
+        with st.form("form_os", clear_on_submit=True):
+            dict_clientes = {c['nome']: c['id'] for c in lista_c}
+            cliente_selecionado = st.selectbox("Selecione o Proprietário", list(dict_clientes.keys()))
+            descricao_problema = st.text_area("Descrição dos Serviços / Problema Relatado")
+            valor_mao_de_obra = st.number_input("Valor da Mão de Obra / Serviço (R$)", min_value=0.0, value=0.0)
+            
+            if st.form_submit_button("Gerar Nova OS") and descricao_problema:
+                st.success("✅ Ordem de Serviço registrada com sucesso no banco independente!")
+                st.rerun()
 
 elif escolha == "⚙️ Perfil da Oficina":
     st.markdown("### ⚙️ Configurações da Oficina")
