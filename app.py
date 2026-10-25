@@ -76,7 +76,7 @@ if escolha == "Painel Geral":
 
 elif escolha == "Clientes & Motos":
     st.markdown("### 📝 Cadastro de Cliente")
-    with st.form("form_cliente"):
+    with st.form("form_cliente", clear_on_submit=True):
         nome = st.text_input("Nome Completo")
         cpf_visual = st.text_input("CPF (Somente números)")
         tel_visual = st.text_input("WhatsApp (Com DDD)")
@@ -94,7 +94,7 @@ elif escolha == "Clientes & Motos":
 
 elif escolha == "Estoque de Peças":
     st.markdown("### 🗂️ Controle de Estoque de Motos")
-    with st.form("form_estoque"):
+    with st.form("form_estoque", clear_on_submit=True):
         n_p = st.text_input("Nome da Peça")
         qtd = st.number_input("Quantidade Inicial", min_value=0, value=10)
         c_u = st.number_input("Preço de Custo (R$)", min_value=0.0)

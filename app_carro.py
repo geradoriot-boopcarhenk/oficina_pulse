@@ -76,7 +76,7 @@ if escolha == "Painel Geral":
 
 elif escolha == "Clientes & Carros":
     st.markdown("### 📝 Cadastro de Cliente Proprietário")
-    with st.form("form_cliente"):
+    with st.form("form_cliente", clear_on_submit=True):
         nome = st.text_input("Nome do Proprietário")
         cpf_visual = st.text_input("CPF (Somente números)")
         tel_visual = st.text_input("WhatsApp de Contato (Com DDD)")
@@ -96,7 +96,7 @@ elif escolha == "Clientes & Carros":
 
 elif escolha == "Estoque de Peças":
     st.markdown("### 🗂️ Estoque de Peças Automotivas")
-    with st.form("form_estoque"):
+    with st.form("form_estoque", clear_on_submit=True):
         n_p = st.text_input("Nome da Peça")
         qtd = st.number_input("Quantidade em Estoque", min_value=0, value=5)
         c_u = st.number_input("Preço de Custo (R$)", min_value=0.0)
@@ -116,5 +116,5 @@ elif escolha == "⚙️ Perfil da Oficina":
         base64_image = base64.b64encode(bytes_data).decode('utf-8')
         if st.button("💾 Salvar Logomarca", width="stretch"):
             if db.salvar_logomarca_oficina(oficina_id, base64_image):
-                st.success("🎉 Logomarca atualizada!")
+                st.success("🎉 Logomarca updated! Atualize a página.")
                 st.rerun()
