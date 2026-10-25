@@ -31,7 +31,7 @@ def salvar_logomarca_oficina(oficina_id, imagem_base64):
     res = requests.patch(url, headers=HEADERS, json=dados)
     return res.status_code == 200
 
-def obter_logomarca_oficina(oficina_id):
+def obtener_logomarca_oficina(oficina_id):
     url = f"{SUPABASE_URL}/rest/v1/oficinas?id=eq.{oficina_id}&select=logomarca_base64"
     res = requests.get(url, headers=HEADERS)
     if res.status_code == 200 and len(res.json()) > 0:
@@ -63,6 +63,16 @@ def listar_clientes(oficina_id):
 def cadastrar_cliente(nome, telefone, cpf, oficina_id):
     url = f"{SUPABASE_URL}/rest/v1/clientes"
     dados = {"nome": nome, "telefone": telefone, "cpf": cpf, "oficina_id": oficina_id}
+    res = requests.post(url, headers=HEADERS, json=dados)
+    return res.status_code == 201
+
+def criar_ordem_servico(cliente_id, descricao, valor_mao_de_obra):
+    url = f"{SUPABASE_URL}/rest/v1/ordens_servico"
+    dados = {
+        "moto_id": cliente_id,
+        "descricao_problema": f"{descricao} | Mão de Obra: R$ {valor_mao_de_obra:.2f}",
+        "status": "Pendente"
+    }
     res = requests.post(url, headers=HEADERS, json=dados)
     return res.status_code == 201
 

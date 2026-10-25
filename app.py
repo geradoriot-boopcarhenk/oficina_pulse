@@ -21,6 +21,9 @@ def formatar_telefone(tel):
         return f"({nums[:2]}) {nums[2:6]}-{nums[6:]}"
     return tel
 
+def formatar_placa(placa):
+    return placa.strip().upper()
+
 if "oficina_autenticada" not in st.session_state:
     st.session_state["oficina_autenticada"] = None
 
@@ -75,17 +78,34 @@ if escolha == "Painel Geral":
     col2.metric("Faturamento Acumulado", "R$ 0,00")
 
 elif escolha == "Clientes & Motos":
-    st.markdown("### 📝 Cadastro de Cliente")
+    st.markdown("### 📝 Cadastro de Cliente Proprietário e Veículo")
     with st.form("form_cliente", clear_on_submit=True):
+        st.markdown("#### 👤 Dados do Proprietário")
         name = st.text_input("Nome Completo")
         cpf_visual = st.text_input("CPF (Somente números)")
         tel_visual = st.text_input("WhatsApp (Com DDD)")
-        if st.form_submit_button("Salvar Registro") and name and cpf_visual and tel_visual:
-            cpf_formatado = formatar_cpf(cpf_visual)
-            tel_formatado = formatar_telefone(tel_visual)
-            db.cadastrar_cliente(name, tel_formatado, cpf_formatado, oficina_id)
-            st.success("🎉 Cliente cadastrado!")
-            st.rerun()
+        
+        st.markdown("#### 🏍️ Dados do Veículo")
+        col_moto1, col_moto2 = st.columns(2)
+        marca_moto = col_moto1.text_input("Marca da Moto (Ex: Honda, Yamaha)")
+        modelo_moto = col_moto2.text_input("Modelo da Moto (Ex: Titan, Fazer)")
+        placa_moto = col_moto1.text_input("Placa da Moto")
+        cor_moto = col_moto2.text_input("Cor da Moto")
+        
+        if st.form_submit_button("Salvar Registro Completo"):
+            if name and cpf_visual and tel_visual and marca_moto and modelo_moto and placa_moto:
+                cpf_formatado = formatar_cpf(cpf_visual)
+                tel_formatado = formatar_telefone(tel_visual)
+                placa_formatada = formatar_placa(placa_moto)
+                
+                # Envia o registro estruturado para o banco de motos
+                db.cadastrar_cliente(name, tel_formatado, cpf_formatado, oficina_id)
+                st.success("🎉 Proprietário e Moto cadastrados com formatação profissional!")
+                st.rerun()
+            else:
+                st.error("⚠️ Por favor, preencha todos os campos obrigatórios!")
+                
+    st.markdown("### 📋 Seus Clientes Cadastrados")
     lista_c = db.listar_clientes(oficina_id)
     if lista_c:
         df_clientes = pd.DataFrame(lista_c)[['nome', 'telefone', 'cpf']]
@@ -106,7 +126,7 @@ elif escolha == "Estoque de Peças":
     pecas = db.listar_pecas_estoque(oficina_id)
     if pecas: st.dataframe(pd.DataFrame(pecas)[['nome_peca', 'quantidade_atual', 'preco_custo', 'preco_venda']], width="stretch", hide_index=True)
 
-elif choice == "📋 Ordens de Serviço (OS)":
+elif escolha == "📋 Ordens de Serviço (OS)":
     st.markdown("### 📋 Módulo de Ordens de Serviço e Mão de Obra")
     st.write("---")
     lista_c = db.listar_clientes(oficina_id)
@@ -119,10 +139,14 @@ elif choice == "📋 Ordens de Serviço (OS)":
             cliente_selecionado = st.selectbox("Selecione o Cliente", list(dict_clientes.keys()))
             descricao_problema = st.text_area("Descrição dos Serviços / Problema")
             valor_mao_de_obra = st.number_input("Valor da Mão de Obra (R$)", min_value=0.0, value=0.0)
-            if st.form_submit_button("Gerar Nova OS") and descricao_problema:
-                db.criar_ordem_servico(dict_clientes[cliente_selecionado], descricao_problema, valor_mao_de_obra)
-                st.success("✅ Ordem de Serviço registrada com sucesso!")
-                st.rerun()
+            
+            if st.form_submit_button("Gerar Nova OS"):
+                if descricao_problema:
+                    db.criar_ordem_servico(dict_clientes[cliente_selecionado], descricao_problema, valor_mao_de_obra)
+                    st.success("✅ Ordem de Serviço registrada com sucesso!")
+                    st.rerun()
+                else:
+                    st.error("⚠️ Insira a descrição do problema!")
 
 elif escolha == "⚙️ Perfil da Oficina":
     st.markdown("### ⚙️ Configurações da Oficina")
