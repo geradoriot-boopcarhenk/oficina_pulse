@@ -76,7 +76,29 @@ def criar_ordem_servico(cliente_id, descricao, valor_mao_de_obra):
     res = requests.post(url, headers=HEADERS, json=dados)
     return res.status_code == 201
 
+def listar_ordens_servico():
+    url = f"{SUPABASE_URL}/rest/v1/ordens_servico?select=*,clientes(nome)"
+    res = requests.get(url, headers=HEADERS)
+    return res.json() if res.status_code == 200 else []
+
+def atualizar_status_os(os_id, novo_status):
+    url = f"{SUPABASE_URL}/rest/v1/ordens_servico?id=eq.{os_id}"
+    dados = {"status": novo_status}
+    requests.patch(url, headers=HEADERS, json=dados)
+
 def contar_os_por_status(status):
     url = f"{SUPABASE_URL}/rest/v1/ordens_servico?status=eq.{status}&select=id"
     res = requests.get(url, headers=HEADERS)
     return len(res.json()) if res.status_code == 200 else 0
+
+def obter_totais_financeiros():
+    url = f"{SUPABASE_URL}/rest/v1/ordens_servico?status=eq.Concluído&select=descricao_problema"
+    res = requests.get(url, headers=HEADERS)
+    total = 0.0
+    if res.status_code == 200:
+        for os in res.json():
+            texto = os.get("descricao_problema", "")
+            match = re.search(r'Mão de Obra: R\$ ([\d.]+)', texto)
+            if match:
+                total += float(match.group(1))
+    return total

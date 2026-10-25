@@ -72,7 +72,13 @@ escolha = st.sidebar.selectbox("Mapeamento do Sistema", menu)
 if escolha == "Painel Geral":
     col1, col2 = st.columns(2)
     col1.metric("OS em Andamento", db.contar_os_por_status("Pendente"))
-    col2.metric("Faturamento Mensal", "R$ 0,00")
+    faturamento_atual = db.obter_totais_financeiros()
+    col2.metric("Faturamento Mensal", f"R$ {faturamento_atual:,.2f}")
+    
+    if faturamento_atual > 0:
+        st.markdown("#### 📈 Desempenho Financeiro")
+        df_grafico = pd.DataFrame([{"Mês": "Outubro", "Faturamento (R$)": faturamento_atual}])
+        st.bar_chart(df_grafico, x="Mês", y="Faturamento (R$)")
 
 elif escolha == "Clientes & Carros":
     st.markdown("### 📝 Cadastro de Cliente Proprietário")
@@ -128,8 +134,24 @@ elif escolha == "📋 Ordens de Serviço (OS)":
                     db.criar_ordem_servico(dict_clientes[cliente_selecionado], descricao_problema, valor_mao_de_obra)
                     st.success("✅ Ordem de Serviço registrada com sucesso!")
                     st.rerun()
+        
+        st.write("---")
+        st.markdown("#### 📋 Histórico de Ordens de Serviço Ativas")
+        lista_os = db.listar_ordens_servico()
+        if lista_os:
+            for os_item in lista_os:
+                c1, c2, c3 = st.columns([2, 4, 2])
+                nome_c = os_item.get('clientes', {}).get('nome', 'Cliente') if os_item.get('clientes') else "Proprietário"
+                c1.write(f"👤 **{nome_c}**")
+                c2.write(f"📄 {os_item['descricao_problema']}")
+                
+                if os_item['status'] == 'Pendente':
+                    if c3.button("🏁 Concluir Serviço", key=f"btn_{os_item['id']}"):
+                        db.atualizar_status_os(os_item['id'], 'Concluído')
+                        st.success("🎉 OS Concluída!")
+                        st.rerun()
                 else:
-                    st.error("⚠️ Insira a descrição do problema!")
+                    c3.markdown("🟢 **Concluído**")
 
 elif escolha == "⚙️ Perfil da Oficina":
     st.markdown("### ⚙️ Configurações da Oficina")
