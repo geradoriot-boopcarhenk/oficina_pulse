@@ -112,7 +112,6 @@ elif escolha == "📋 Ordens de Serviço (OS)":
     st.markdown("### 📋 Módulo de Ordens de Serviço e Mão de Obra")
     st.write("---")
     
-    # Lista clientes cadastrados para vincular na OS
     lista_c = db.listar_clientes(oficina_id)
     if not lista_c:
         st.warning("⚠️ Cadastre pelo menos um Cliente antes de abrir uma Ordem de Serviço.")
@@ -124,10 +123,13 @@ elif escolha == "📋 Ordens de Serviço (OS)":
             descricao_problema = st.text_area("Descrição dos Serviços / Problema Relatado")
             valor_mao_de_obra = st.number_input("Valor da Mão de Obra / Serviço (R$)", min_value=0.0, value=0.0)
             
-            if st.form_submit_button("Gerar Nova OS") and descricao_problema:
-                db.criar_ordem_servico(dict_clientes[cliente_selecionado], descricao_problema, valor_mao_de_obra)
-                st.success("✅ Ordem de Serviço registrada com sucesso no banco independente!")
-                st.rerun()
+            if st.form_submit_button("Gerar Nova OS"):
+                if descricao_problema:
+                    db.criar_ordem_servico(dict_clientes[cliente_selecionado], descricao_problema, valor_mao_de_obra)
+                    st.success("✅ Ordem de Serviço registrada com sucesso!")
+                    st.rerun()
+                else:
+                    st.error("⚠️ Insira a descrição do problema!")
 
 elif escolha == "⚙️ Perfil da Oficina":
     st.markdown("### ⚙️ Configurações da Oficina")

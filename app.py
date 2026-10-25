@@ -106,7 +106,7 @@ elif escolha == "Estoque de Peças":
     pecas = db.listar_pecas_estoque(oficina_id)
     if pecas: st.dataframe(pd.DataFrame(pecas)[['nome_peca', 'quantidade_atual', 'preco_custo', 'preco_venda']], width="stretch", hide_index=True)
 
-elif escolha == "📋 Ordens de Serviço (OS)":
+elif choice == "📋 Ordens de Serviço (OS)":
     st.markdown("### 📋 Módulo de Ordens de Serviço e Mão de Obra")
     st.write("---")
     lista_c = db.listar_clientes(oficina_id)
@@ -120,6 +120,7 @@ elif escolha == "📋 Ordens de Serviço (OS)":
             descricao_problema = st.text_area("Descrição dos Serviços / Problema")
             valor_mao_de_obra = st.number_input("Valor da Mão de Obra (R$)", min_value=0.0, value=0.0)
             if st.form_submit_button("Gerar Nova OS") and descricao_problema:
+                db.criar_ordem_servico(dict_clientes[cliente_selecionado], descricao_problema, valor_mao_de_obra)
                 st.success("✅ Ordem de Serviço registrada com sucesso!")
                 st.rerun()
 
