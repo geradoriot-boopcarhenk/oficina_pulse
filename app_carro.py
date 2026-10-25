@@ -2,11 +2,24 @@
 import streamlit as st
 import database_carro as db
 import pandas as pd
-import utils
-import urllib.parse
 import base64
+import re
 
 st.set_page_config(page_title="Oficina Mecânica Automotiva", page_icon="🚗", layout="wide")
+
+def formatar_cpf(cpf):
+    nums = re.sub(r'\D', '', cpf)
+    if len(nums) == 11:
+        return f"{nums[:3]}.{nums[3:6]}.{nums[6:9]}-{nums[9:]}"
+    return cpf
+
+def formatar_telefone(tel):
+    nums = re.sub(r'\D', '', tel)
+    if len(nums) == 11:
+        return f"({nums[:2]}) {nums[2:7]}-{nums[7:]}"
+    elif len(nums) == 10:
+        return f"({nums[:2]}) {nums[2:6]}-{nums[6:]}"
+    return tel
 
 if "oficina_autenticada" not in st.session_state:
     st.session_state["oficina_autenticada"] = None
@@ -56,7 +69,7 @@ st.title(f"🚗 Gestão Integrada - {nome_oficina_ativa}")
 menu = ["Painel Geral", "Clientes & Carros", "Estoque de Peças", "⚙️ Perfil da Oficina"]
 escolha = st.sidebar.selectbox("Mapeamento do Sistema", menu)
 
-if __name__ == '__main__' and escolha == "Painel Geral":
+if escolha == "Painel Geral":
     col1, col2 = st.columns(2)
     col1.metric("OS em Andamento", db.contar_os_por_status("Pendente"))
     col2.metric("Faturamento Mensal", "R$ 0,00")
@@ -65,14 +78,21 @@ elif escolha == "Clientes & Carros":
     st.markdown("### 📝 Cadastro de Cliente Proprietário")
     with st.form("form_cliente"):
         nome = st.text_input("Nome do Proprietário")
-        cpf_visual = st.text_input("CPF")
-        tel_visual = st.text_input("WhatsApp de Contato")
+        cpf_visual = st.text_input("CPF (Somente números)")
+        tel_visual = st.text_input("WhatsApp de Contato (Com DDD)")
         if st.form_submit_button("Salvar Registro Proprietário") and nome and cpf_visual and tel_visual:
-            db.cadastrar_cliente(nome, tel_visual, cpf_visual, oficina_id)
-            st.success("🎉 Cliente cadastrado com sucesso!")
+            cpf_formatado = formatar_cpf(cpf_visual)
+            tel_formatado = formatar_telefone(tel_visual)
+            db.cadastrar_cliente(nome, tel_formatado, cpf_formatado, oficina_id)
+            st.success("🎉 Cliente cadastrado com formatação profissional!")
             st.rerun()
+    
+    st.markdown("### 📋 Seus Clientes Cadastrados")
     lista_c = db.listar_clientes(oficina_id)
-    if lista_c: st.dataframe(pd.DataFrame(lista_c)[['nome', 'telefone', 'cpf']], width="stretch", hide_index=True)
+    if lista_c:
+        df_clientes = pd.DataFrame(lista_c)[['nome', 'telefone', 'cpf']]
+        df_clientes.columns = ['Nome do Proprietário', 'WhatsApp', 'CPF']
+        st.dataframe(df_clientes, width="stretch", hide_index=True)
 
 elif escolha == "Estoque de Peças":
     st.markdown("### 🗂️ Estoque de Peças Automotivas")
@@ -86,7 +106,7 @@ elif escolha == "Estoque de Peças":
             st.success(f"📦 {n_p} adicionada!")
             st.rerun()
     pecas = db.listar_pecas_estoque(oficina_id)
-    if pecas: st.dataframe(pd.DataFrame(pecas)[['nome_peça', 'quantidade_atual', 'preco_custo', 'preco_venda']], width="stretch", hide_index=True)
+    if pecas: st.dataframe(pd.DataFrame(pecas)[['nome_peça', 'whitespace', 'preco_custo', 'preco_venda']], width="stretch", hide_index=True)
 
 elif escolha == "⚙️ Perfil da Oficina":
     st.markdown("### ⚙️ Configurações da Oficina")

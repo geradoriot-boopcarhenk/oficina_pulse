@@ -2,11 +2,24 @@
 import streamlit as st
 import database_moto as db
 import pandas as pd
-import utils
-import urllib.parse
 import base64
+import re
 
 st.set_page_config(page_title="Oficina de Motos", page_icon="🏍️", layout="wide")
+
+def formatar_cpf(cpf):
+    nums = re.sub(r'\D', '', cpf)
+    if len(nums) == 11:
+        return f"{nums[:3]}.{nums[3:6]}.{nums[6:9]}-{nums[9:]}"
+    return cpf
+
+def formatar_telefone(tel):
+    nums = re.sub(r'\D', '', tel)
+    if len(nums) == 11:
+        return f"({nums[:2]}) {nums[2:7]}-{nums[7:]}"
+    elif len(nums) == 10:
+        return f"({nums[:2]}) {nums[2:6]}-{nums[6:]}"
+    return tel
 
 if "oficina_autenticada" not in st.session_state:
     st.session_state["oficina_autenticada"] = None
@@ -65,14 +78,19 @@ elif escolha == "Clientes & Motos":
     st.markdown("### 📝 Cadastro de Cliente")
     with st.form("form_cliente"):
         nome = st.text_input("Nome Completo")
-        cpf_visual = st.text_input("CPF")
+        cpf_visual = st.text_input("CPF (Somente números)")
         tel_visual = st.text_input("WhatsApp (Com DDD)")
         if st.form_submit_button("Salvar Registro") and nome and cpf_visual and tel_visual:
-            db.cadastrar_cliente(nome, tel_visual, cpf_visual, oficina_id)
-            st.success("🎉 Cliente cadastrado com sucesso!")
+            cpf_formatado = formatar_cpf(cpf_visual)
+            tel_formatado = formatar_telefone(tel_visual)
+            db.cadastrar_cliente(nome, tel_formatado, cpf_formatado, oficina_id)
+            st.success("🎉 Cliente cadastrado com formatação profissional!")
             st.rerun()
     lista_c = db.listar_clientes(oficina_id)
-    if lista_c: st.dataframe(pd.DataFrame(lista_c)[['nome', 'telefone', 'cpf']], width="stretch", hide_index=True)
+    if lista_c:
+        df_clientes = pd.DataFrame(lista_c)[['nome', 'telefone', 'cpf']]
+        df_clientes.columns = ['Nome do Cliente', 'WhatsApp', 'CPF']
+        st.dataframe(df_clientes, width="stretch", hide_index=True)
 
 elif escolha == "Estoque de Peças":
     st.markdown("### 🗂️ Controle de Estoque de Motos")
