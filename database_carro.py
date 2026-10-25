@@ -16,7 +16,7 @@ def autenticar_oficina(usuario, senha):
     url = f"{SUPABASE_URL}/rest/v1/oficinas?usuario=eq.{usuario}&senha=eq.{senha}"
     res = requests.get(url, headers=HEADERS)
     if res.status_code == 200 and len(res.json()) > 0:
-        return res.json()[0]
+        return res.json()
     return None
 
 def cadastrar_nova_oficina(nome, usuario, senha):
@@ -35,7 +35,7 @@ def obter_logomarca_oficina(oficina_id):
     url = f"{SUPABASE_URL}/rest/v1/oficinas?id=eq.{oficina_id}&select=logomarca_base64"
     res = requests.get(url, headers=HEADERS)
     if res.status_code == 200 and len(res.json()) > 0:
-        return res.json()[0].get('logomarca_base64')
+        return res.json().get('logomarca_base64')
     return None
 
 def listar_pecas_estoque(oficina_id):
@@ -69,7 +69,7 @@ def cadastrar_cliente(nome, telephone, cpf, oficina_id):
 def criar_ordem_servico(cliente_id, descricao, valor_mao_de_obra):
     url = f"{SUPABASE_URL}/rest/v1/ordens_servico"
     dados = {
-        "moto_id": cliente_id,  # Vinculado a coluna estrutural mapeada no banco
+        "cliente_id": cliente_id,  # Ajustado cirurgicamente para a tabela de carros
         "descricao_problema": f"{descricao} | Mão de Obra: R$ {valor_mao_de_obra:.2f}",
         "status": "Pendente"
     }
