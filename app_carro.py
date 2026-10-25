@@ -125,6 +125,7 @@ elif escolha == "📋 Ordens de Serviço (OS)":
             valor_mao_de_obra = st.number_input("Valor da Mão de Obra / Serviço (R$)", min_value=0.0, value=0.0)
             
             if st.form_submit_button("Gerar Nova OS") and descricao_problema:
+                db.criar_ordem_servico(dict_clientes[cliente_selecionado], descricao_problema, valor_mao_de_obra)
                 st.success("✅ Ordem de Serviço registrada com sucesso no banco independente!")
                 st.rerun()
 

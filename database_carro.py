@@ -66,5 +66,17 @@ def cadastrar_cliente(nome, telephone, cpf, oficina_id):
     res = requests.post(url, headers=HEADERS, json=dados)
     return res.status_code == 201
 
+def criar_ordem_servico(cliente_id, descricao, valor_mao_de_obra):
+    url = f"{SUPABASE_URL}/rest/v1/ordens_servico"
+    dados = {
+        "moto_id": cliente_id,  # Vinculado a coluna estrutural mapeada no banco
+        "descricao_problema": f"{descricao} | Mão de Obra: R$ {valor_mao_de_obra:.2f}",
+        "status": "Pendente"
+    }
+    res = requests.post(url, headers=HEADERS, json=dados)
+    return res.status_code == 201
+
 def contar_os_por_status(status):
-    return 0
+    url = f"{SUPABASE_URL}/rest/v1/ordens_servico?status=eq.{status}&select=id"
+    res = requests.get(url, headers=HEADERS)
+    return len(res.json()) if res.status_code == 200 else 0
