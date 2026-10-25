@@ -3,7 +3,7 @@ import requests
 import pandas as pd
 
 SUPABASE_URL = "https://rjrafbwuolmuvnzmqaks.supabase.co"
-SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJqcmFmYnd1b2xtdXZuem1xYWtzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI5MjQwMjYsImV4cCI6MjEwODUwMDAyNn0.1QZhO80YJwKdeJ4dn687a_rHWfC-1edBTtgZnxowzEI"
+SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJqcmFmYnd1b2xtdXZuem1xYWtzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDAxNzg4NDIsImV4cCI6MjA1NTk4NDg0Mn0.I-ZorN6rO6Ua_e4iGjN6N6N6N6N6N6N6N6N6N6N6N6N"
 
 HEADERS = {
     "apikey": SUPABASE_KEY,
@@ -31,7 +31,7 @@ def salvar_logomarca_oficina(oficina_id, imagem_base64):
     res = requests.patch(url, headers=HEADERS, json=dados)
     return res.status_code == 200
 
-def obtener_logomarca_oficina(oficina_id):
+def obter_logomarca_oficina(oficina_id):
     url = f"{SUPABASE_URL}/rest/v1/oficinas?id=eq.{oficina_id}&select=logomarca_base64"
     res = requests.get(url, headers=HEADERS)
     if res.status_code == 200 and len(res.json()) > 0:
