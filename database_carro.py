@@ -3,7 +3,7 @@ import requests
 import pandas as pd
 
 SUPABASE_URL = "https://rhzrammhslouwuuragop.supabase.co"
-SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJoenJhbW1oc2xvdXd1dXJhZ29wIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI4OTgwMzUsImV4cCI6MjA1NjAxNjQ1Mn0.ZXbhYTGH1HdeMrI9hVDXFnp02zSpbbGzlo6wbc1mO8o"
+SUPABASE_KEY = "sb_publishable_q_jv6ihPC2AjJtMedXcawQ_XiDOf0mH"
 
 HEADERS = {
     "apikey": SUPABASE_KEY,
@@ -31,7 +31,7 @@ def salvar_logomarca_oficina(oficina_id, imagem_base64):
     res = requests.patch(url, headers=HEADERS, json=dados)
     return res.status_code == 200
 
-def obter_logomarca_oficina(oficina_id):
+def obtener_logomarca_oficina(oficina_id):
     url = f"{SUPABASE_URL}/rest/v1/oficinas?id=eq.{oficina_id}&select=logomarca_base64"
     res = requests.get(url, headers=HEADERS)
     if res.status_code == 200 and len(res.json()) > 0:
@@ -60,9 +60,9 @@ def listar_clientes(oficina_id):
     res = requests.get(url, headers=HEADERS)
     return res.json() if res.status_code == 200 else []
 
-def cadastrar_cliente(nome, telefone, cpf, oficina_id):
+def cadastrar_cliente(nome, telephone, cpf, oficina_id):
     url = f"{SUPABASE_URL}/rest/v1/clientes"
-    dados = {"nome": nome, "telefone": telefone, "cpf": cpf, "oficina_id": oficina_id}
+    dados = {"nome": nome, "telefone": telephone, "cpf": cpf, "oficina_id": oficina_id}
     res = requests.post(url, headers=HEADERS, json=dados)
     return res.status_code == 201
 
