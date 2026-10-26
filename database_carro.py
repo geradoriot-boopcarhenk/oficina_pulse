@@ -17,7 +17,7 @@ def autenticar_oficina(usuario, senha):
     url = f"{SUPABASE_URL}/rest/v1/oficinas?usuario=eq.{usuario}&senha=eq.{senha}"
     res = requests.get(url, headers=HEADERS)
     if res.status_code == 200 and len(res.json()) > 0:
-        return res.json()
+        return res.json()[0]
     return None
 
 def cadastrar_nova_oficina(nome, usuario, senha):
@@ -36,7 +36,7 @@ def obter_logomarca_oficina(oficina_id):
     url = f"{SUPABASE_URL}/rest/v1/oficinas?id=eq.{oficina_id}&select=logomarca_base64"
     res = requests.get(url, headers=HEADERS)
     if res.status_code == 200 and len(res.json()) > 0:
-        return res.json().get('logomarca_base64')
+        return res.json()[0].get('logomarca_base64')
     return None
 
 def listar_pecas_estoque(oficina_id):
@@ -91,7 +91,7 @@ def atualizar_status_os(os_id, novo_status, oficina_id=None):
         url_os = f"{SUPABASE_URL}/rest/v1/ordens_servico?id=eq.{os_id}&select=descricao_problema"
         res_os = requests.get(url_os, headers=HEADERS)
         if res_os.status_code == 200 and len(res_os.json()) > 0:
-            texto = res_os.json().get("descricao_problema", "")
+            texto = res_os.json()[0].get("descricao_problema", "")
             match = re.search(r'\+ Peça: (.+?) \(x(\d+)\)', texto)
             if match:
                 nome_peca_usada = match.group(1).strip()
@@ -103,7 +103,6 @@ def atualizar_status_os(os_id, novo_status, oficina_id=None):
                     if nome_banco.strip().lower() == nome_peca_usada.lower():
                         nova_qtd = max(0, int(p['quantidade_atual']) - qtd_usada)
                         url_update = f"{SUPABASE_URL}/rest/v1/estoque_pecas?id=eq.{p['id']}"
-                        # Força o envio estritamente como número inteiro nativo do Python
                         requests.patch(url_update, headers=HEADERS, json={"quantidade_atual": int(nova_qtd)})
                         break
 
