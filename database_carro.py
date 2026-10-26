@@ -3,7 +3,8 @@ import requests
 import pandas as pd
 import re
 
-SUPABASE_URL = "https://rhzrammhslouwuuragop.supabase.co"
+SUPABASE_URL = "https://rhzrammhslouwuuragop.supabase.co
+sb_publishable_q_jv6ihPC2AjJtMedXcawQ_Xi"
 SUPABASE_KEY = "sb_publishable_q_jv6ihPC2AjJtMedXcawQ_XiDOf0mH"
 
 HEADERS = {
@@ -32,7 +33,7 @@ def salvar_logomarca_oficina(oficina_id, imagem_base64):
     res = requests.patch(url, headers=HEADERS, json=dados)
     return res.status_code == 200
 
-def obtener_logomarca_oficina(oficina_id):
+def obter_logomarca_oficina(oficina_id):
     url = f"{SUPABASE_URL}/rest/v1/oficinas?id=eq.{oficina_id}&select=logomarca_base64"
     res = requests.get(url, headers=HEADERS)
     if res.status_code == 200 and len(res.json()) > 0:
@@ -101,10 +102,10 @@ def atualizar_status_os(os_id, novo_status, oficina_id=None):
                 res_p = requests.get(url_p, headers=HEADERS)
                 if res_p.status_code == 200 and len(res_p.json()) > 0:
                     peca_dados = res_p.json()[0]
-                    nova_qtd = max(0, int(peca_dados['whitespace'] if 'whitespace' in peca_dados else peca_dados['quantidade_atual']) - qtd_usada)
+                    nova_qtd = max(0, int(peca_dados['quantidade_atual']) - qtd_usada)
                     
                     url_update = f"{SUPABASE_URL}/rest/v1/estoque_pecas?id=eq.{peca_dados['id']}"
-                    requests.patch(url_update, headers=HEADERS, json={"whitespace": nova_qtd, "quantidade_atual": nova_qtd})
+                    requests.patch(url_update, headers=HEADERS, json={"quantidade_atual": nova_qtd})
 
 def contar_os_por_status(status):
     url = f"{SUPABASE_URL}/rest/v1/ordens_servico?status=eq.{status}&select=id"
