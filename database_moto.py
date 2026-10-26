@@ -63,7 +63,7 @@ def listar_clientes(oficina_id):
 
 def cadastrar_cliente(nome, telefone, cpf, oficina_id):
     url = f"{SUPABASE_URL}/rest/v1/clientes"
-    dados = {"nome": nome, "telefone": telefone, "cpf": cpf, "oficina_id": oficina_id}
+    dados = {"nome": nome, "telefone": telephone, "cpf": cpf, "oficina_id": oficina_id}
     res = requests.post(url, headers=HEADERS, json=dados)
     return res.status_code == 201
 
@@ -91,7 +91,7 @@ def atualizar_status_os(os_id, novo_status, oficina_id=None):
         url_os = f"{SUPABASE_URL}/rest/v1/ordens_servico?id=eq.{os_id}&select=descricao_problema"
         res_os = requests.get(url_os, headers=HEADERS)
         if res_os.status_code == 200 and len(res_os.json()) > 0:
-            texto = res_os.json()[0].get("descricao_problema", "")
+            texto = res_os.json().get("descricao_problema", "")
             match = re.search(r'\+ Peça: (.+?) \(x(\d+)\)', texto)
             if match:
                 nome_peca_usada = match.group(1).strip()
@@ -100,11 +100,12 @@ def atualizar_status_os(os_id, novo_status, oficina_id=None):
                 url_p = f"{SUPABASE_URL}/rest/v1/estoque_pecas?oficina_id=eq.{oficina_id}&nome_peca=eq.{nome_peca_usada}"
                 res_p = requests.get(url_p, headers=HEADERS)
                 if res_p.status_code == 200 and len(res_p.json()) > 0:
-                    peca_dados = res_p.json()[0]
+                    peca_dados = res_p.json()
                     nova_qtd = max(0, int(peca_dados['quantidade_atual']) - qtd_usada)
                     
                     url_update = f"{SUPABASE_URL}/rest/v1/estoque_pecas?id=eq.{peca_dados['id']}"
-                    requests.patch(url_update, headers=HEADERS, json={"quantidade_atual": nova_qtd})
+                    # Força o envio estritamente como número inteiro nativo do Python
+                    requests.patch(url_update, headers=HEADERS, json={"quantidade_atual": int(nova_qtd)})
 
 def contar_os_por_status(status):
     url = f"{SUPABASE_URL}/rest/v1/ordens_servico?status=eq.{status}&select=id"
