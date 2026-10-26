@@ -116,10 +116,8 @@ elif escolha == "Estoque de Peças":
     pecas = db.listar_pecas_estoque(oficina_id)
     if pecas:
         df_p = pd.DataFrame(pecas)
-        # Força mapeamento seguro idependente se veio com ou sem cedilha do banco
         if 'nome_peça' in df_p.columns:
             df_p = df_p.rename(columns={'nome_peça': 'nome_peca'})
-        
         if 'nome_peca' in df_p.columns:
             df_final_p = df_p[['nome_peca', 'quantidade_atual', 'preco_custo', 'preco_venda']]
             df_final_p.columns = ['Nome da Peça', 'Qtd em Estoque', 'Preço de Custo', 'Preço de Venda']
@@ -145,7 +143,6 @@ elif escolha == "📋 Ordens de Serviço (OS)":
                 df_p_os = pd.DataFrame(pecas_estoque)
                 if 'nome_peça' in df_p_os.columns:
                     df_p_os = df_p_os.rename(columns={'nome_peça': 'nome_peca'})
-                
                 dict_pecas = {p['nome_peca']: p for p in df_p_os.to_dict(orient='records')}
                 peca_selecionada = st.selectbox("Vincular Peça do Estoque (Opcional)", ["Nenhuma"] + list(dict_pecas.keys()))
                 qtd_peca = st.number_input("Quantidade da Peça utilizada", min_value=1, value=1)
@@ -180,7 +177,7 @@ elif escolha == "📋 Ordens de Serviço (OS)":
         lista_os = db.listar_ordens_servico()
         if lista_os:
             for os_item in lista_os:
-                c1, c2, c3 = st.columns()
+                c1, c2, c3 = st.columns(3)  # Corrigido cirurgicamente inserindo o numero de colunas
                 nome_c = os_item.get('clientes', {}).get('nome', 'Cliente') if os_item.get('clientes') else "Proprietário"
                 c1.write(f"👤 **{nome_c}**")
                 c2.write(f"📄 {os_item['descricao_problema']}")
