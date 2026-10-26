@@ -1,8 +1,9 @@
 # database_carro.py
 import requests
 import pandas as pd
+import re
 
-SUPABASE_URL = "https://rhzrammhslouwuuragop.supabase.co"
+SUPABASE_URL = "https://https://rhzrammhslouwuuragop.supabase.co"
 SUPABASE_KEY = "sb_publishable_q_jv6ihPC2AjJtMedXcawQ_XiDOf0mH"
 
 HEADERS = {
@@ -16,7 +17,7 @@ def autenticar_oficina(usuario, senha):
     url = f"{SUPABASE_URL}/rest/v1/oficinas?usuario=eq.{usuario}&senha=eq.{senha}"
     res = requests.get(url, headers=HEADERS)
     if res.status_code == 200 and len(res.json()) > 0:
-        return res.json()[0]
+        return res.json()
     return None
 
 def cadastrar_nova_oficina(nome, usuario, senha):
@@ -35,7 +36,7 @@ def obter_logomarca_oficina(oficina_id):
     url = f"{SUPABASE_URL}/rest/v1/oficinas?id=eq.{oficina_id}&select=logomarca_base64"
     res = requests.get(url, headers=HEADERS)
     if res.status_code == 200 and len(res.json()) > 0:
-        return res.json()[0].get('logomarca_base64')
+        return res.json().get('logomarca_base64')
     return None
 
 def listar_pecas_estoque(oficina_id):
