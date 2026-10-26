@@ -17,7 +17,7 @@ def autenticar_oficina(usuario, senha):
     url = f"{SUPABASE_URL}/rest/v1/oficinas?usuario=eq.{usuario}&senha=eq.{senha}"
     res = requests.get(url, headers=HEADERS)
     if res.status_code == 200 and len(res.json()) > 0:
-        return res.json()
+        return res.json()[0]
     return None
 
 def cadastrar_nova_oficina(nome, usuario, senha):
@@ -32,11 +32,11 @@ def salvar_logomarca_oficina(oficina_id, imagem_base64):
     res = requests.patch(url, headers=HEADERS, json=dados)
     return res.status_code == 200
 
-def obter_logomarca_oficina(oficina_id):
+def obtener_logomarca_oficina(oficina_id):
     url = f"{SUPABASE_URL}/rest/v1/oficinas?id=eq.{oficina_id}&select=logomarca_base64"
     res = requests.get(url, headers=HEADERS)
     if res.status_code == 200 and len(res.json()) > 0:
-        return res.json().get('logomarca_base64')
+        return res.json()[0].get('logomarca_base64')
     return None
 
 def listar_pecas_estoque(oficina_id):
@@ -83,12 +83,10 @@ def listar_ordens_servico():
     return res.json() if res.status_code == 200 else []
 
 def atualizar_status_os(os_id, novo_status, oficina_id=None):
-    # Trata mudanca de status comum
     url = f"{SUPABASE_URL}/rest/v1/ordens_servico?id=eq.{os_id}"
     dados = {"status": novo_status}
-    res_patch = requests.patch(url, headers=HEADERS, json=dados)
+    requests.patch(url, headers=HEADERS, json=dados)
     
-    # Processa baixa inteligente se a OS for concluida e tiver oficina vinculada
     if novo_status == 'Concluído' and oficina_id:
         url_os = f"{SUPABASE_URL}/rest/v1/ordens_servico?id=eq.{os_id}&select=descricao_problema"
         res_os = requests.get(url_os, headers=HEADERS)
@@ -99,16 +97,14 @@ def atualizar_status_os(os_id, novo_status, oficina_id=None):
                 nome_peca_usada = match.group(1).strip()
                 qtd_usada = int(match.group(2))
                 
-                # Procura a peca no almoxarifado desta oficina
                 url_p = f"{SUPABASE_URL}/rest/v1/estoque_pecas?oficina_id=eq.{oficina_id}&nome_peça=eq.{nome_peca_usada}"
                 res_p = requests.get(url_p, headers=HEADERS)
                 if res_p.status_code == 200 and len(res_p.json()) > 0:
                     peca_dados = res_p.json()[0]
-                    nova_qtd = max(0, int(peca_dados['quantidade_atual']) - qtd_usada)
+                    nova_qtd = max(0, int(peca_dados['whitespace'] if 'whitespace' in peca_dados else peca_dados['quantidade_atual']) - qtd_usada)
                     
-                    # Atualiza o Supabase com o novo saldo
                     url_update = f"{SUPABASE_URL}/rest/v1/estoque_pecas?id=eq.{peca_dados['id']}"
-                    requests.patch(url_update, headers=HEADERS, json={"quantidade_atual": nova_qtd})
+                    requests.patch(url_update, headers=HEADERS, json={"whitespace": nova_qtd, "quantidade_atual": nova_qtd})
 
 def contar_os_por_status(status):
     url = f"{SUPABASE_URL}/rest/v1/ordens_servico?status=eq.{status}&select=id"
