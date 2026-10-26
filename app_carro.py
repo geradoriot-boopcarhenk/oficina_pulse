@@ -111,8 +111,19 @@ elif escolha == "Estoque de Peças":
             db.cadastrar_peca_estoque(oficina_id, n_p, qtd, c_u, v_u)
             st.success(f"📦 {n_p} adicionada!")
             st.rerun()
+    
+    st.markdown("#### 📋 Almoxarifado de Peças Ativo")
     pecas = db.listar_pecas_estoque(oficina_id)
-    if pecas: st.dataframe(pd.DataFrame(pecas)[['nome_peça', 'whitespace', 'preco_custo', 'preco_venda']], width="stretch", hide_index=True)
+    if pecas:
+        df_p = pd.DataFrame(pecas)
+        # Força mapeamento seguro idependente se veio com ou sem cedilha do banco
+        if 'nome_peça' in df_p.columns:
+            df_p = df_p.rename(columns={'nome_peça': 'nome_peca'})
+        
+        if 'nome_peca' in df_p.columns:
+            df_final_p = df_p[['nome_peca', 'quantidade_atual', 'preco_custo', 'preco_venda']]
+            df_final_p.columns = ['Nome da Peça', 'Qtd em Estoque', 'Preço de Custo', 'Preço de Venda']
+            st.dataframe(df_final_p, width="stretch", hide_index=True)
 
 elif escolha == "📋 Ordens de Serviço (OS)":
     st.markdown("### 📋 Módulo de Ordens de Serviço e Orçamentos Comerciais")
@@ -130,9 +141,12 @@ elif escolha == "📋 Ordens de Serviço (OS)":
             cliente_selecionado = st.selectbox("Selecione o Proprietário", list(dict_clientes.keys()))
             descricao_problema = st.text_area("Descrição dos Serviços / Defeito")
             
-            # Seletor dinamico de pecas vindas do estoque ativo
             if pecas_estoque:
-                dict_pecas = {p['nome_peça']: p for p in pecas_estoque}
+                df_p_os = pd.DataFrame(pecas_estoque)
+                if 'nome_peça' in df_p_os.columns:
+                    df_p_os = df_p_os.rename(columns={'nome_peça': 'nome_peca'})
+                
+                dict_pecas = {p['nome_peca']: p for p in df_p_os.to_dict(orient='records')}
                 peca_selecionada = st.selectbox("Vincular Peça do Estoque (Opcional)", ["Nenhuma"] + list(dict_pecas.keys()))
                 qtd_peca = st.number_input("Quantidade da Peça utilizada", min_value=1, value=1)
             else:
@@ -166,7 +180,7 @@ elif escolha == "📋 Ordens de Serviço (OS)":
         lista_os = db.listar_ordens_servico()
         if lista_os:
             for os_item in lista_os:
-                c1, c2, c3 = st.columns([1, 2, 1])
+                c1, c2, c3 = st.columns()
                 nome_c = os_item.get('clientes', {}).get('nome', 'Cliente') if os_item.get('clientes') else "Proprietário"
                 c1.write(f"👤 **{nome_c}**")
                 c2.write(f"📄 {os_item['descricao_problema']}")
