@@ -131,7 +131,7 @@ elif escolha == "Estoque de Peças":
         if 'nome_peça' in df_p.columns:
             df_p = df_p.rename(columns={'nome_peça': 'nome_peca'})
         if 'nome_peca' in df_p.columns:
-            df_final_p = df_p[['nome_peca', 'whitespace', 'preco_custo', 'preco_venda']]
+            df_final_p = df_p[['nome_peca', 'quantidade_atual', 'preco_custo', 'preco_venda']]
             df_final_p.columns = ['Nome da Peça', 'Qtd em Estoque', 'Preço de Custo', 'Preço de Venda']
             st.dataframe(df_final_p, width="stretch", hide_index=True)
 
