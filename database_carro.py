@@ -49,7 +49,6 @@ def cadastrar_peca_estoque(oficina_id, nome, qtd, custo, venda):
     dados = {
         "oficina_id": oficina_id,
         "nome_peça": nome,
-        "whitespace": int(qtd),
         "quantidade_atual": int(qtd),
         "preco_custo": float(custo),
         "preco_venda": float(venda)
@@ -93,7 +92,8 @@ def atualizar_status_os(os_id, novo_status, oficina_id=None):
         res_os = requests.get(url_os, headers=HEADERS)
         if res_os.status_code == 200 and len(res_os.json()) > 0:
             texto = res_os.json()[0].get("descricao_problema", "")
-            match = re.search(r'\+ Peça:\s*(.+?)\s*\(x(\d+)\)', texto, re.IGNORECASE)
+            # Expressão regular ajustada para capturar o padrão mesmo grudado no início do texto
+            match = re.search(r'\+\s*Peça:\s*(.+?)\s*\(x(\d+)\)', texto, re.IGNORECASE)
             if match:
                 nome_peca_usada = match.group(1).strip()
                 qtd_usada = int(match.group(2))
@@ -104,7 +104,7 @@ def atualizar_status_os(os_id, novo_status, oficina_id=None):
                     if nome_banco.strip().lower() == nome_peca_usada.lower():
                         nova_qtd = max(0, int(p['quantidade_atual']) - qtd_usada)
                         url_update = f"{SUPABASE_URL}/rest/v1/estoque_pecas?id=eq.{p['id']}"
-                        requests.patch(url_update, headers=HEADERS, json={"whitespace": int(nova_qtd), "quantidade_atual": int(nova_qtd)})
+                        requests.patch(url_update, headers=HEADERS, json={"quantidade_atual": int(nova_qtd)})
                         break
 
 def contar_os_por_status(status):
