@@ -17,7 +17,7 @@ def autenticar_oficina(usuario, senha):
     url = f"{SUPABASE_URL}/rest/v1/oficinas?usuario=eq.{usuario}&senha=eq.{senha}"
     res = requests.get(url, headers=HEADERS)
     if res.status_code == 200 and len(res.json()) > 0:
-        return res.json()[0]
+        return res.json()
     return None
 
 def cadastrar_nova_oficina(nome, usuario, senha):
@@ -36,7 +36,7 @@ def obter_logomarca_oficina(oficina_id):
     url = f"{SUPABASE_URL}/rest/v1/oficinas?id=eq.{oficina_id}&select=logomarca_base64"
     res = requests.get(url, headers=HEADERS)
     if res.status_code == 200 and len(res.json()) > 0:
-        return res.json()[0].get('logomarca_base64')
+        return res.json().get('logomarca_base64')
     return None
 
 def listar_pecas_estoque(oficina_id):
@@ -83,16 +83,19 @@ def listar_ordens_servico():
     return res.json() if res.status_code == 200 else []
 
 def atualizar_status_os(os_id, novo_status, oficina_id=None):
+    # Executa a atualização de status primária no Supabase
     url = f"{SUPABASE_URL}/rest/v1/ordens_servico?id=eq.{os_id}"
     dados = {"status": novo_status}
     requests.patch(url, headers=HEADERS, json=dados)
     
+    # Processa a baixa automática se o status for Concluído
     if novo_status == 'Concluído' and oficina_id:
         url_os = f"{SUPABASE_URL}/rest/v1/ordens_servico?id=eq.{os_id}&select=descricao_problema"
         res_os = requests.get(url_os, headers=HEADERS)
         if res_os.status_code == 200 and len(res_os.json()) > 0:
             texto = res_os.json()[0].get("descricao_problema", "")
-            match = re.search(r'\+ Peça: (.+?) \(x(\d+)\)', texto, re.IGNORECASE)
+            # Varre o texto buscando de forma robusta ignorando maiúsculas/minúsculas
+            match = re.search(r'\+ Peça:\s*(.+?)\s*\(x(\d+)\)', texto, re.IGNORECASE)
             if match:
                 nome_peca_usada = match.group(1).strip()
                 qtd_usada = int(match.group(2))
