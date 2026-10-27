@@ -1,4 +1,4 @@
-k# app_carro.py
+# app_carro.py
 import streamlit as st
 import database_carro as db
 import pandas as pd
@@ -203,4 +203,3 @@ elif escolha == "📋 Ordens de Serviço (OS)":
                 
                 if os_item['status'] == 'Pendente':
                     if c3.button("🏁 Concluir Serviço", key=f"btn_{os_item['id']}"):
-
