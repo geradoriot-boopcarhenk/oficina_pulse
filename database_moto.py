@@ -91,8 +91,8 @@ def atualizar_status_os(os_id, novo_status, oficina_id=None):
         url_os = f"{SUPABASE_URL}/rest/v1/ordens_servico?id=eq.{os_id}&select=descricao_problema"
         res_os = requests.get(url_os, headers=HEADERS)
         if res_os.status_code == 200 and len(res_os.json()) > 0:
-            texto = res_os.json().get("descricao_problema", "")
-            match = re.search(r'\+ Peça: (.+?) \(x(\d+)\)', texto)
+            texto = res_os.json()[0].get("descricao_problema", "")
+            match = re.search(r'\+ Peça: (.+?) \(x(\d+)\)', texto, re.IGNORECASE)
             if match:
                 nome_peca_usada = match.group(1).strip()
                 qtd_usada = int(match.group(2))
@@ -104,7 +104,6 @@ def atualizar_status_os(os_id, novo_status, oficina_id=None):
                     nova_qtd = max(0, int(peca_dados['quantidade_atual']) - qtd_usada)
                     
                     url_update = f"{SUPABASE_URL}/rest/v1/estoque_pecas?id=eq.{peca_dados['id']}"
-                    # Força o envio estritamente como número inteiro nativo do Python
                     requests.patch(url_update, headers=HEADERS, json={"quantidade_atual": int(nova_qtd)})
 
 def contar_os_por_status(status):
@@ -119,7 +118,7 @@ def obter_totais_financeiros():
     if res.status_code == 200:
         for os in res.json():
             texto = os.get("descricao_problema", "")
-            match = re.search(r'Mão de Obra: R\$ ([\d.]+)', texto)
+            match = re.search(r'Mão de Obra: R\$ ([\d.]+)', texto, re.IGNORECASE)
             if match:
                 total += float(match.group(1))
     return total

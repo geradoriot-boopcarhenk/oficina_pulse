@@ -3,7 +3,7 @@ import requests
 import pandas as pd
 import re
 
-SUPABASE_URL = "https://rhzrammhslouwuuragop.supabase.co"
+SUPABASE_URL = "https://rhzrammhslouwuuragop.supabase.co
 SUPABASE_KEY = "sb_publishable_q_jv6ihPC2AjJtMedXcawQ_XiDOf0mH"
 
 HEADERS = {
@@ -17,7 +17,7 @@ def autenticar_oficina(usuario, senha):
     url = f"{SUPABASE_URL}/rest/v1/oficinas?usuario=eq.{usuario}&senha=eq.{senha}"
     res = requests.get(url, headers=HEADERS)
     if res.status_code == 200 and len(res.json()) > 0:
-        return res.json()[0]
+        return res.json()
     return None
 
 def cadastrar_nova_oficina(nome, usuario, senha):
@@ -36,7 +36,7 @@ def obter_logomarca_oficina(oficina_id):
     url = f"{SUPABASE_URL}/rest/v1/oficinas?id=eq.{oficina_id}&select=logomarca_base64"
     res = requests.get(url, headers=HEADERS)
     if res.status_code == 200 and len(res.json()) > 0:
-        return res.json()[0].get('logomarca_base64')
+        return res.json().get('logomarca_base64')
     return None
 
 def listar_pecas_estoque(oficina_id):
@@ -92,7 +92,8 @@ def atualizar_status_os(os_id, novo_status, oficina_id=None):
         res_os = requests.get(url_os, headers=HEADERS)
         if res_os.status_code == 200 and len(res_os.json()) > 0:
             texto = res_os.json()[0].get("descricao_problema", "")
-            match = re.search(r'\+ Peça: (.+?) \(x(\d+)\)', texto)
+            # Adicionado re.IGNORECASE para aceitar p minúsculo ou P maiúsculo
+            match = re.search(r'\+ Peça: (.+?) \(x(\d+)\)', texto, re.IGNORECASE)
             if match:
                 nome_peca_usada = match.group(1).strip()
                 qtd_usada = int(match.group(2))
@@ -118,7 +119,7 @@ def obter_totais_financeiros():
     if res.status_code == 200:
         for os in res.json():
             texto = os.get("descricao_problema", "")
-            match = re.search(r'Mão de Obra: R\$ ([\d.]+)', texto)
+            match = re.search(r'Mão de Obra: R\$ ([\d.]+)', texto, re.IGNORECASE)
             if match:
                 total += float(match.group(1))
     return total
