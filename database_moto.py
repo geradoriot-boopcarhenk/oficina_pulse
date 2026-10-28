@@ -17,7 +17,7 @@ def autenticar_oficina(usuario, senha):
     url = f"{SUPABASE_URL}/rest/v1/oficinas?usuario=eq.{usuario}&senha=eq.{senha}"
     res = requests.get(url, headers=HEADERS)
     if res.status_code == 200 and len(res.json()) > 0:
-        return res.json()[0] # Adicionado o index zero definitivo para o app ler a oficina plana
+        return res.json()[0]
     return None
 
 def cadastrar_nova_oficina(nome, usuario, senha):
