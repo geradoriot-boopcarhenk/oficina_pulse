@@ -3,7 +3,7 @@ import requests
 import pandas as pd
 import re
 
-SUPABASE_URL = "https://rjrafbwuolmuvnzmqaks.supabase.co"
+SUPABASE_URL = "https://supabase.co"
 SUPABASE_KEY = "sb_publishable_MoR8dbquEI64xGsiXbkYRg_J9oWrXZw"
 
 HEADERS = {
@@ -17,7 +17,7 @@ def autenticar_oficina(usuario, senha):
     url = f"{SUPABASE_URL}/rest/v1/oficinas?usuario=eq.{usuario}&senha=eq.{senha}"
     res = requests.get(url, headers=HEADERS)
     if res.status_code == 200 and len(res.json()) > 0:
-        return res.json()
+        return res.json()[0] # Adicionado o indice zero para entregar a oficina perfeitamente desempacotada
     return None
 
 def cadastrar_nova_oficina(nome, usuario, senha):
@@ -36,7 +36,7 @@ def obter_logomarca_oficina(oficina_id):
     url = f"{SUPABASE_URL}/rest/v1/oficinas?id=eq.{oficina_id}&select=logomarca_base64"
     res = requests.get(url, headers=HEADERS)
     if res.status_code == 200 and len(res.json()) > 0:
-        return res.json().get('logomarca_base64')
+        return res.json()[0].get('logomarca_base64')
     return None
 
 def listar_pecas_estoque(oficina_id):
@@ -61,9 +61,9 @@ def listar_clientes(oficina_id):
     res = requests.get(url, headers=HEADERS)
     return res.json() if res.status_code == 200 else []
 
-def cadastrar_cliente(nome, telephone, cpf, oficina_id):
+def cadastrar_cliente(nome, telefone, cpf, oficina_id):
     url = f"{SUPABASE_URL}/rest/v1/clientes"
-    dados = {"nome": nome, "telefone": telephone, "cpf": cpf, "oficina_id": oficina_id}
+    dados = {"nome": nome, "telefone": telefone, "cpf": cpf, "oficina_id": oficina_id}
     res = requests.post(url, headers=HEADERS, json=dados)
     return res.status_code == 201
 
@@ -91,21 +91,21 @@ def atualizar_status_os(os_id, novo_status, oficina_id=None):
         url_os = f"{SUPABASE_URL}/rest/v1/ordens_servico?id=eq.{os_id}&select=descricao_problema"
         res_os = requests.get(url_os, headers=HEADERS)
         if res_os.status_code == 200 and len(res_os.json()) > 0:
-            texto = res_os.json().get("descricao_problema", "")
+            texto = res_os.json()[0].get("descricao_problema", "")
             match = re.search(r'\+\s*Peça:\s*(.+?)\s*\(x(\d+)\)', texto, re.IGNORECASE)
             if match:
                 nome_peca_usada = match.group(1).strip()
                 qtd_usada = int(match.group(2))
                 
-                pecas_totais = listar_pecas_estoque(oficina_id)
-                for p in pecas_totais:
-                    nome_banco = p.get('nome_peca') or ""
-                    if nome_banco.strip().lower() == nome_peca_usada.lower():
-                        nova_qtd = max(0, int(p['quantidade_atual']) - qtd_usada)
-                        url_update = f"{SUPABASE_URL}/rest/v1/estoque_pecas?id=eq.{p['id']}"
-                        requests.patch(url_update, headers=HEADERS, json={"quantidade_atual": int(nova_qtd)})
-                        break
-
+                url_p = f"{SUPABASE_URL}/rest/v1/estoque_pecas?oficina_id=eq.{oficina_id}&nome_peca=eq.{nome_peca_usada}"
+                res_p = requests.get(url_p, headers=HEADERS)
+                if res_p.status_code == 200 and len(res_p.json()) > 0:
+                    peca_dados = res_p.json()[0]
+                    nova_qtd = max(0, int(peca_dados['quantidade_atual']) - qtd_usada)
+                    
+                    url_update = f"{SUPABASE_URL}/rest/v1/estoque_pecas?id=eq.{peca_dados['id']}"
+                    requests.patch(url_update, headers=HEADERS, json={"quantidade_atual": int(nova_qtd)})
+                        
 def contar_os_por_status(status):
     url = f"{SUPABASE_URL}/rest/v1/ordens_servico?status=eq.{status}&select=id"
     res = requests.get(url, headers=HEADERS)
