@@ -1,4 +1,4 @@
-# app.py
+k# app.py
 import streamlit as st
 import database_moto as db
 import pandas as pd
@@ -49,29 +49,18 @@ if "oficina_autenticada" not in st.session_state:
 if not st.session_state["oficina_autenticada"]:
     st.markdown("<h1 style='text-align: center; color: #F97316;'>🏍️ Oficina Pulse - Portal de Assinantes</h1>", unsafe_allow_html=True)
     st.write("---")
-    tab_login, tab_cadastro = st.tabs(["🔑 Acessar Sistema", "🏢 Cadastrar Nova Oficina"])
-    with tab_login:
-        usuario_input = st.text_input("Usuário Administrativo")
-        senha_input = st.text_input("Senha Comercial", type="password")
-        if st.button("Entrar no Painel", width="stretch"):
-            oficina = db.autenticar_oficina(usuario_input, senha_input)
-            if oficina:
-                st.session_state["oficina_autenticada"] = oficina
-                st.success("🎉 Bem-vindo!")
-                st.rerun()
-            else:
-                st.error("❌ Credenciais incorretas ou oficina não cadastrada!")
-    with tab_cadastro:
-        st.markdown("### 📝 Crie sua conta")
-        novo_nome = st.text_input("Nome da Oficina / Razão Social")
-        novo_user = st.text_input("Escolha um Usuário único")
-        nova_senha = st.text_input("Escolha uma Senha segura", type="password")
-        if st.button("Finalizar Cadastro de Empresa", width="stretch"):
-            if novo_nome and novo_user and nova_senha:
-                if db.cadastrar_nova_oficina(novo_nome, novo_user, nova_senha):
-                    st.success("✅ Oficina cadastrada com sucesso! Agora você pode fazer o login na aba ao lado.")
-                else:
-                    st.error("❌ Erro ao cadastrar. O usuário já pode estar em uso.")
+    
+    st.markdown("### 🔑 Acessar Sistema Privado")
+    usuario_input = st.text_input("Usuário Administrativo")
+    senha_input = st.text_input("Senha Comercial", type="password")
+    if st.button("Entrar no Painel", width="stretch"):
+        oficina = db.autenticar_oficina(usuario_input, senha_input)
+        if oficina:
+            st.session_state["oficina_autenticada"] = oficina if isinstance(oficina, list) else oficina
+            st.success("🎉 Bem-vindo!")
+            st.rerun()
+        else:
+            st.error("❌ Credenciais incorretas!")
     st.stop()
 
 oficina_id = st.session_state["oficina_autenticada"]["id"]
@@ -106,7 +95,7 @@ elif escolha == "Clientes & Motos":
     with st.form("form_cliente_moto_v3", clear_on_submit=True):
         st.markdown("#### 👤 Dados do Proprietário")
         nome = st.text_input("Nome Completo")
-        cpf_visual = st.text_input("CPF (Somente números)")
+        cpf_visual = st.text_input("CPF (Somente numbers)")
         tel_visual = st.text_input("WhatsApp (Com DDD)")
         st.markdown("#### 🏍️ Dados do Veículo")
         col_m1, col_m2 = st.columns(2)
@@ -185,3 +174,19 @@ elif escolha == "📋 Ordens de Serviço (OS)":
                     valor_total_os = valor_mao_de_obra + total_pecas_calculado
                     descricao_final = f"{descricao_problema}{detalhe_peca_texto}"
                     db.criar_ordem_servico(dict_clientes[cliente_selecionado], descricao_final, valor_total_os)
+                    st.success(f"✅ OS Registrada! Valor Total: R$ {valor_total_os:,.2f}")
+                    st.rerun()
+        st.write("---")
+        st.markdown("#### 📋 Histórico de Ordens de Serviço Ativas")
+        if "visualizar_recibo" not in st.session_state: st.session_state["visualizar_recibo"] = None
+        lista_os = db.listar_ordens_servico()
+        if lista_os:
+            for os_item in lista_os:
+                c1, c2, c3, c4 = st.columns([1.5, 2, 1, 1])
+                cliente_obj = os_item.get('clientes', {}) or {}
+                nome_c = cliente_obj.get('nome', 'Cliente')
+                tel_c = cliente_obj.get('telefone', 'Não Informado')
+                cpf_c = cliente_obj.get('cpf', 'Não Informado')
+                
+                c1.write(f"👤 **{nome_c}**")
+
