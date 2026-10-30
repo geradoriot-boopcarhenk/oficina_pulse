@@ -56,7 +56,8 @@ if not st.session_state["oficina_autenticada"]:
     if st.button("Entrar no Painel", width="stretch"):
         oficina = db.autenticar_oficina(usuario_input, senha_input)
         if oficina:
-            st.session_state["oficina_autenticada"] = oficina if isinstance(oficina, list) else oficina
+            # Desempacotador flexível idêntico ao de motos para blindar contra listas estruturadas
+            st.session_state["oficina_autenticada"] = oficina[0] if isinstance(oficina, list) else oficina
             st.success("🎉 Bem-vindo!")
             st.rerun()
         else:
@@ -182,7 +183,5 @@ elif escolha == "📋 Ordens de Serviço (OS)":
                     st.success(f"✅ OS Registrada! Valor Total do Orçamento: R$ {valor_total_os:,.2f}")
                     st.rerun()
                 else:
-                    st.error("⚠️ Insira a descrição do problem!")
+                    st.error("⚠️ Insira a descrição do problema!")
         st.write("---")
-        st.markdown("#### 📋 Histórico de Ordens de Serviço Ativas")
-        if "visualizar_recibo" not in st.session_state: st.session_state["visualizar_recibo"] = None
