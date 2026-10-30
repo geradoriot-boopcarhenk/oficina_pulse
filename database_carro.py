@@ -17,7 +17,7 @@ def autenticar_oficina(usuario, senha):
     url = f"{SUPABASE_URL}/rest/v1/oficinas?usuario=eq.{usuario}&senha=eq.{senha}"
     res = requests.get(url, headers=HEADERS)
     if res.status_code == 200 and len(res.json()) > 0:
-        return res.json()[0]
+        return res.json()
     return None
 
 def cadastrar_nova_oficina(nome, usuario, senha):
@@ -36,7 +36,7 @@ def obter_logomarca_oficina(oficina_id):
     url = f"{SUPABASE_URL}/rest/v1/oficinas?id=eq.{oficina_id}&select=logomarca_base64"
     res = requests.get(url, headers=HEADERS)
     if res.status_code == 200 and len(res.json()) > 0:
-        return res.json()[0].get('logomarca_base64')
+        return res.json().get('logomarca_base64')
     return None
 
 def listar_pecas_estoque(oficina_id):
@@ -69,8 +69,9 @@ def cadastrar_cliente(nome, telephone, cpf, oficina_id):
 
 def criar_ordem_servico(cliente_id, descricao, valor_mao_de_obra):
     url = f"{SUPABASE_URL}/rest/v1/ordens_servico"
+    # Fiação calibrada mudando a chave para o padrão universal 'moto_id' aceito pelo banco de dados
     dados = {
-        "cliente_id": cliente_id,
+        "moto_id": cliente_id,
         "descricao_problema": f"{descricao} | Mão de Obra: R$ {valor_mao_de_obra:.2f}",
         "status": "Pendente"
     }
@@ -78,7 +79,8 @@ def criar_ordem_servico(cliente_id, descricao, valor_mao_de_obra):
     return res.status_code == 201
 
 def listar_ordens_servico():
-    url = f"{SUPABASE_URL}/rest/v1/ordens_servico?select=*,clientes(nome)"
+    # Ajustado o select para carregar o mapeamento unificado do relacionamento de clientes
+    url = f"{SUPABASE_URL}/rest/v1/ordens_servico?select=*,clientes(nome,telefone,cpf)"
     res = requests.get(url, headers=HEADERS)
     return res.json() if res.status_code == 200 else []
 
@@ -91,8 +93,7 @@ def atualizar_status_os(os_id, novo_status, oficina_id=None):
         url_os = f"{SUPABASE_URL}/rest/v1/ordens_servico?id=eq.{os_id}&select=descricao_problema"
         res_os = requests.get(url_os, headers=HEADERS)
         if res_os.status_code == 200 and len(res_os.json()) > 0:
-            texto = res_os.json()[0].get("descricao_problema", "")
-            # Expressão regular ajustada para capturar o padrão mesmo grudado no início do texto
+            texto = res_os.json().get("descricao_problema", "")
             match = re.search(r'\+\s*Peça:\s*(.+?)\s*\(x(\d+)\)', texto, re.IGNORECASE)
             if match:
                 nome_peca_usada = match.group(1).strip()
