@@ -1,4 +1,5 @@
-# app_carro.py
+# app_carro.py - Sincronizacao Definitiva de OS
+
 import streamlit as st
 import database_carro as db
 import pandas as pd
