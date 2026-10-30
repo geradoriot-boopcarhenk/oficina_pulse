@@ -49,20 +49,30 @@ if "oficina_autenticada" not in st.session_state:
 if not st.session_state["oficina_autenticada"]:
     st.markdown("<h1 style='text-align: center; color: #EA580C;'>🚗 Oficina Pulse Automotiva - Portal de Assinantes</h1>", unsafe_allow_html=True)
     st.write("---")
-    
-    st.markdown("### 🔑 Acessar Sistema Privado")
-    usuario_input = st.text_input("Usuário Administrativo")
-    senha_input = st.text_input("Senha Comercial", type="password")
-    if st.button("Entrar no Painel", width="stretch"):
-        oficina = db.autenticar_oficina(usuario_input, senha_input)
-        if oficina:
-            # Desempacotador flexível idêntico ao de motos para blindar contra listas estruturadas
-            st.session_state["oficina_autenticada"] = oficina[0] if isinstance(oficina, list) else oficina
-            st.success("🎉 Bem-vindo!")
-            st.rerun()
-        else:
-            st.error("❌ Credenciais incorretas!")
-    # # st.stop()
+    tab_login, tab_cadastro = st.tabs(["🔑 Acessar Sistema", "🏢 Cadastrar Nova Oficina"])
+    with tab_login:
+        usuario_input = st.text_input("Usuário Administrativo")
+        senha_input = st.text_input("Senha Comercial", type="password")
+        if st.button("Entrar no Painel", width="stretch"):
+            oficina = db.autenticar_oficina(usuario_input, senha_input)
+            if oficina:
+                st.session_state["oficina_autenticada"] = oficina if isinstance(oficina, list) else oficina
+                st.success("🎉 Bem-vindo!")
+                st.rerun()
+            else:
+                st.error("❌ Credenciais incorretas!")
+    with tab_cadastro:
+        st.markdown("### 📝 Crie sua conta")
+        novo_nome = st.text_input("Nome da Oficina / Razão Social")
+        novo_user = st.text_input("Escolha um Usuário único")
+        nova_senha = st.text_input("Escolha uma Senha segura", type="password")
+        if st.button("Finalizar Cadastro de Empresa", width="stretch"):
+            if novo_nome and novo_user and nova_senha:
+                if db.cadastrar_nova_oficina(novo_nome, novo_user, nova_senha):
+                    st.success("✅ Oficina cadastrada com sucesso! Agora você pode fazer o login na aba ao lado.")
+                else:
+                    st.error("❌ Erro ao cadastrar. O usuário já pode estar em uso.")
+    st.stop()
 
 oficina_id = st.session_state["oficina_autenticada"]["id"]
 nome_oficina_ativa = st.session_state["oficina_autenticada"]["nome_oficina"]
@@ -140,7 +150,7 @@ elif escolha == "Estoque de Peças":
         if 'nome_peça' in df_p.columns:
             df_p = df_p.rename(columns={'nome_peça': 'nome_peca'})
         if 'nome_peca' in df_p.columns:
-            df_final_p = df_p[['nome_peca', 'quantidade_atual', 'preco_custo', 'preco_venda']]
+            df_final_p = df_p[['nome_peca', 'whitespace' if 'whitespace' in df_p.columns else 'quantidade_atual', 'preco_custo', 'preco_venda']]
             df_final_p.columns = ['Nome da Peça', 'Qtd em Estoque', 'Preço de Custo', 'Preço de Venda']
             st.dataframe(df_final_p, width="stretch", hide_index=True)
 
@@ -174,14 +184,3 @@ elif escolha == "📋 Ordens de Serviço (OS)":
                     total_pecas_calculado = 0.0
                     detalhe_peca_texto = ""
                     if peca_selecionada != "Nenhuma":
-                        p_dados = dict_pecas[peca_selecionada]
-                        total_pecas_calculado = float(p_dados['preco_venda']) * qtd_peca
-                        detalhe_peca_texto = f" + Peça: {peca_selecionada} (x{qtd_peca})"
-                    valor_total_os = valor_mao_de_obra + total_pecas_calculado
-                    descricao_final = f"{descricao_problema}{detalhe_peca_texto}"
-                    db.criar_ordem_servico(dict_clientes[cliente_selecionado], descricao_final, valor_total_os)
-                    st.success(f"✅ OS Registrada! Valor Total do Orçamento: R$ {valor_total_os:,.2f}")
-                    st.rerun()
-                else:
-                    st.error("⚠️ Insira a descrição do problema!")
-        st.write("---")
