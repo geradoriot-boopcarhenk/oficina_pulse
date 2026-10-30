@@ -32,7 +32,7 @@ def salvar_logomarca_oficina(oficina_id, imagem_base64):
     res = requests.patch(url, headers=HEADERS, json=dados)
     return res.status_code == 200
 
-def obtener_logomarca_oficina(oficina_id):
+def obter_logomarca_oficina(oficina_id):
     url = f"{SUPABASE_URL}/rest/v1/oficinas?id=eq.{oficina_id}&select=logomarca_base64"
     res = requests.get(url, headers=HEADERS)
     if res.status_code == 200 and len(res.json()) > 0:
@@ -92,7 +92,7 @@ def atualizar_status_os(os_id, novo_status, oficina_id=None):
         res_os = requests.get(url_os, headers=HEADERS)
         if res_os.status_code == 200 and len(res_os.json()) > 0:
             texto = res_os.json().get("descricao_problema", "")
-            match = re.search(r'\+\s*Peça:\s*(.+?)\s*\(x(\d+)\)', texto, re.IGNORECASE)
+            match = re.search(r'\+\s*Peça:\s*(.+?)\s*\(x(\d+)\)', text, re.IGNORECASE)
             if match:
                 nome_peca_usada = match.group(1).strip()
                 qtd_usada = int(match.group(2))
