@@ -24,7 +24,7 @@ def formatar_telefone(tel):
 def formatar_placa(placa):
     return placa.strip().upper()
 
-def generar_recibo_impressao(nome_cliente, detalhes_os, nome_oficina, telefone_cliente, cpf_cliente):
+def gerar_recibo_impressao(nome_cliente, detalhes_os, nome_oficina, telefone_cliente, cpf_cliente):
     html_recibo = f"""
     <div style="padding: 20px; border: 2px solid #333; border-radius: 10px; font-family: sans-serif; background-color: white; color: black;">
         <h2 style="text-align: center; margin-bottom: 5px; color: #EA580C;">📋 RECIBO DE ORDEM DE SERVIÇO - {nome_oficina.upper()}</h2>
@@ -56,7 +56,8 @@ if not st.session_state["oficina_autenticada"]:
         if st.button("Entrar no Painel", width="stretch"):
             oficina = db.autenticar_oficina(usuario_input, senha_input)
             if oficina:
-                st.session_state["oficina_autenticada"] = oficina if isinstance(oficina, list) else oficina
+                # Corrigido o desempacotador plano mestre de lista com o índice zero
+                st.session_state["oficina_autenticada"] = oficina[0] if isinstance(oficina, list) else oficina
                 st.success("🎉 Bem-vindo!")
                 st.rerun()
             else:
@@ -74,8 +75,10 @@ if not st.session_state["oficina_autenticada"]:
                     st.error("❌ Erro ao cadastrar. O usuário já pode estar em uso.")
     st.stop()
 
-oficina_id = st.session_state["oficina_autenticada"]["id"]
-nome_oficina_ativa = st.session_state["oficina_autenticada"]["nome_oficina"]
+# Adicionados os desempacotadores planos nas variáveis de sessão globais
+oficina_dados = st.session_state["oficina_autenticada"]
+oficina_id = oficina_dados[0]["id"] if isinstance(oficina_dados, list) else oficina_dados["id"]
+nome_oficina_ativa = oficina_dados[0]["nome_oficina"] if isinstance(oficina_dados, list) else oficina_dados["nome_oficina"]
 
 logo_data = db.obter_logomarca_oficina(oficina_id)
 if logo_data:
@@ -183,9 +186,3 @@ elif escolha == "📋 Ordens de Serviço (OS)":
                 peca_selecionada = "Nenhuma"
                 qtd_peca = 0
             valor_mao_de_obra = st.number_input("Valor da Mão de Obra / Serviço (R$)", min_value=0.0, value=100.0)
-            if st.form_submit_button("Gerar Nova OS"):
-                if descricao_problema:
-                    total_pecas_calculado = 0.0
-                    detalhe_peca_texto = ""
-                    if peca_selecionada != "Nenhuma":
-                        p_dados = dict_pecas[peca_selecionada]
