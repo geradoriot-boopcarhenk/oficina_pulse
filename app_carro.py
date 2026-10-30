@@ -49,19 +49,20 @@ if "oficina_autenticada" not in st.session_state:
 if not st.session_state["oficina_autenticada"]:
     st.markdown("<h1 style='text-align: center; color: #EA580C;'>🚗 Oficina Pulse Automotiva - Portal de Assinantes</h1>", unsafe_allow_html=True)
     st.write("---")
-    tab_login, tab_cadastro = st.tabs(["🔑 Acessar Sistema", "🏢 Cadastrar Nova Oficina"])
-    with tab_login:
-        usuario_input = st.text_input("Usuário Administrativo")
-        senha_input = st.text_input("Senha Comercial", type="password")
-        if st.button("Entrar no Painel", width="stretch"):
-            oficina = db.autenticar_oficina(usuario_input, senha_input)
-            if oficina:
-                # Corrigido o desempacotador plano mestre de lista com o índice zero
-                st.session_state["oficina_autenticada"] = oficina[0] if isinstance(oficina, list) else oficina
-                st.success("🎉 Bem-vindo!")
-                st.rerun()
-            else:
-                st.error("❌ Credenciais incorretas!")
+    
+    st.markdown("### 🔑 Acessar Sistema Privado")
+    usuario_input = st.text_input("Usuário Administrativo")
+    senha_input = st.text_input("Senha Comercial", type="password")
+    if st.button("Entrar no Painel", width="stretch"):
+        oficina = db.autenticar_oficina(usuario_input, senha_input)
+        if oficina:
+            st.session_state["oficina_autenticada"] = oficina if isinstance(oficina, list) else oficina
+            st.success("🎉 Bem-vindo!")
+            st.rerun()
+        else:
+            st.error("❌ Credenciais incorretas!")
+    st.stop()
+
     with tab_cadastro:
         st.markdown("### 📝 Crie sua conta")
         novo_nome = st.text_input("Nome da Oficina / Razão Social")
