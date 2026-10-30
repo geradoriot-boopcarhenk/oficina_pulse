@@ -40,8 +40,8 @@ def gerar_recibo_impressao(nome_cliente, detalhes_os, nome_oficina, telephone_cl
     if " | " in detalhes_os:
         texto_servicos = detalhes_os.split(" | ")[0]
 
-    # Layout corporativo premium renderizado em markdown puro para evitar conflito com chaves CSS
-    st.markdown(f"""
+    # Chaves CSS duplicadas ({{ e }}) para blindar a f-string contra interpretador puro
+    html_recibo = f"""
     <div style="padding: 25px; border: 1px solid #e2e8f0; border-radius: 12px; font-family: sans-serif; background-color: #ffffff; color: #1e293b; max-width: 650px; margin: 0 auto; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);">
         <div style="text-align: center; margin-bottom: 20px;">
             <h2 style="margin: 0; color: #ea580c; font-size: 22px; font-weight: 700;">📋 COMPROVANTE DE SERVIÇO</h2>
@@ -71,9 +71,9 @@ def gerar_recibo_impressao(nome_cliente, detalhes_os, nome_oficina, telephone_cl
             <p style="margin: 0; font-size: 12px; color: #64748b; font-weight: 500;">Volte sempre! Agradecemos a preferência e a confiança.</p>
         </div>
     </div>
-    """, unsafe_allow_html=True)
+    """
+    st.markdown(html_recibo, unsafe_allow_html=True)
     
-    # Botão de gatilho javascript limpo e isolado de chaves f-string
     st.components.v1.html(
         """
         <div style="text-align: center; margin-top: 5px;">
