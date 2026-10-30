@@ -212,9 +212,6 @@ elif escolha == "📋 Ordens de Serviço (OS)":
                         st.rerun()
                 else:
                     c3.markdown("🟢 **Concluído**")
-                if st.button("❌ Fechar Visualização de Recibo"):
-                    st.session_state["visualizar_recibo"] = None
-                    st.rerun()
 
 elif escolha == "📜 Histórico de Clientes":
     st.markdown("### 📜 Histórico de Serviços Realizados por Cliente")
