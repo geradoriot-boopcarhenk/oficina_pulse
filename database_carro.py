@@ -92,7 +92,7 @@ def atualizar_status_os(os_id, novo_status, oficina_id=None):
         url_os = f"{SUPABASE_URL}/rest/v1/ordens_servico?id=eq.{os_id}&select=descricao_problema"
         res_os = requests.get(url_os, headers=HEADERS)
         if res_os.status_code == 200 and len(res_os.json()) > 0:
-            texto = res_os.json().get("descricao_problema", "")
+            texto = res_os.json()[0].get("descricao_problema", "") if isinstance(res_os.json(), list) and len(res_os.json()) > 0 else res_os.json().get("descricao_problema", "")
             match = re.search(r'\+\s*Peça:\s*(.+?)\s*\(x(\d+)\)', texto, re.IGNORECASE)
             if match:
                 nome_peca_usada = match.group(1).strip()
