@@ -97,7 +97,7 @@ def cadastrar_cliente(nome, telephone, cpf, oficina_id):
 def criar_ordem_servico(cliente_id, descricao, valor_mao_de_obra):
     url = f"{SUPABASE_URL}/rest/v1/ordens_servico"
     dados = {
-        "cliente_id": cliente_id,
+        "cliente_id": cliente_id,,
         "descricao_problema": f"{descricao} | Mão de Obra: R$ {valor_mao_de_obra:.2f}",
         "status": "Pendente"
     }
