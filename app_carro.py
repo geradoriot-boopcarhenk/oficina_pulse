@@ -91,9 +91,6 @@ st.title(f"🚗 Gestão Integrada - {nome_oficina_ativa}")
 menu = ["Painel Geral", "Clientes & Carros", "Estoque de Peças", "📋 Ordens de Serviço (OS)", "📜 Histórico de Clientes", "⚙️ Perfil da Oficina"]
 escolha = st.sidebar.selectbox("Mapeamento do Sistema", menu)
 
-if choice := escolha:
-    pass
-
 if escolha == "Painel Geral":
     col1, col2 = st.columns(2)
     col1.metric("OS em Andamento", db.contar_os_por_status("Pendente"))
@@ -149,14 +146,17 @@ elif escolha == "Estoque de Peças":
     st.markdown("#### 📋 Almoxarifado de Peças Ativo")
     pecas = db.listar_pecas_estoque(oficina_id)
     if pecas:
-        df_p = pd.DataFrame(pecas)
-        col_qtd_moto = 'quantidade'
-        if 'nome_peça' in df_p.columns:
-            df_p = df_p.rename(columns={'nome_peça': 'nome_peca'})
-        if 'nome_peca' in df_p.columns:
-            df_final_p = df_p[['nome_peca', col_qtd_moto, 'preco_custo', 'preco_venda']]
-            df_final_p.columns = ['Nome da Peça', 'Qtd em Estoque', 'Preço de Custo', 'Preço de Venda']
-            st.dataframe(df_final_p, width="stretch", hide_index=True)
+        dados_tabela_estoque = []
+        for p in pecas:
+            nome_peca = p.get('nome_peça') or p.get('nome_peca') or "Sem Nome"
+            qtd_atual = p.get('quantidade') or p.get('quantidade_atual') or 0
+            dados_tabela_estoque.append({
+                "Nome da Peça": nome_peca,
+                "Qtd em Estoque": qtd_atual,
+                "Preço de Custo": p.get('preco_custo', 0.0),
+                "Preço de Venda": p.get('preco_venda', 0.0)
+            })
+        st.dataframe(pd.DataFrame(dados_tabela_estoque), width="stretch", hide_index=True)
 
 elif escolha == "📋 Ordens de Serviço (OS)":
     st.markdown("### 📋 Módulo de Ordens de Serviço e Orçamentos Comerciais")
@@ -172,10 +172,10 @@ elif escolha == "📋 Ordens de Serviço (OS)":
             cliente_selecionado = st.selectbox("Selecione o Proprietário / Veículo", list(dict_clientes.keys()))
             descricao_problema = st.text_area("Descrição dos Serviços / Defeito")
             if pecas_estoque:
-                df_p_os = pd.DataFrame(pecas_estoque)
-                if 'nome_peça' in df_p_os.columns:
-                    df_p_os = df_p_os.rename(columns={'nome_peça': 'nome_peca'})
-                dict_pecas = {p['nome_peca']: p for p in df_p_os.to_dict(orient='records')}
+                dict_pecas = {}
+                for p in pecas_estoque:
+                    nome_chave = p.get('nome_peça') or p.get('nome_peca') or "Peça sem nome"
+                    dict_pecas[nome_chave] = p
                 peca_selecionada = st.selectbox("Vincular Peça do Estoque (Opcional)", ["Nenhuma"] + list(dict_pecas.keys()))
                 qtd_peca = st.number_input("Quantidade da Peça utilizada", min_value=1, value=1)
             else:
@@ -188,4 +188,3 @@ elif escolha == "📋 Ordens de Serviço (OS)":
                     total_pecas_calculado = 0.0
                     detalhe_peca_texto = ""
                     if peca_selecionada != "Nenhuma":
-                        p_dados = dict_pecas[peca_selecionada]
