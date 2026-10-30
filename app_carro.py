@@ -29,30 +29,34 @@ def gerar_recibo_impressao(nome_cliente, detalhes_os, nome_oficina, telefone_cli
     import datetime
     data_atual = datetime.datetime.now().strftime("%d/%m/%Y - %H:%M")
     
-    # Processamento visual de quebra de valores para o subtotal
+    # Extração segura e limpa do valor e descrição dos serviços
     texto_servicos = detalhes_os
-    valor_total_print = ""
+    valor_total_print = "R$ 0,00"
+    
     match_total = re.search(r'Mão de Obra:\s*R\$\s*([\d.,]+)', detalhes_os, re.IGNORECASE)
     if match_total:
         valor_total_print = f"R$ {match_total.group(1)}"
-        texto_servicos = detalhes_os.split('|')[0].strip()
+        
+    if " | " in detalhes_os:
+        texto_servicos = detalhes_os.split(" | ")[0].strip()
 
-    html_recibo = f"""
-    <div style="padding: 25px; border: 1px solid #e2e8f0; border-radius: 12px; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #ffffff; color: #1e293b; max-width: 650px; margin: 0 auto; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);">
+    # Layout corporativo premium renderizado em markdown puro para evitar conflito com chaves CSS
+    st.markdown(f"""
+    <div style="padding: 25px; border: 1px solid #e2e8f0; border-radius: 12px; font-family: sans-serif; background-color: #ffffff; color: #1e293b; max-width: 650px; margin: 0 auto; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);">
         <div style="text-align: center; margin-bottom: 20px;">
-            <h2 style="margin: 0; color: #ea580c; font-size: 22px; font-weight: 700; letter-spacing: -0.5px;">📋 COMPROVANTE DE SERVIÇO</h2>
+            <h2 style="margin: 0; color: #ea580c; font-size: 22px; font-weight: 700;">📋 COMPROVANTE DE SERVIÇO</h2>
             <p style="margin: 4px 0 0 0; font-size: 14px; font-weight: 600; color: #475569;">{nome_oficina.upper()}</p>
             <p style="margin: 2px 0 0 0; font-size: 11px; color: #94a3b8;">Emissão: {data_atual} | Ecossistema Pulse SaaS</p>
         </div>
         
         <div style="border-top: 2px solid #f1f5f9; padding-top: 15px; margin-bottom: 15px;">
-            <h4 style="margin: 0 0 8px 0; color: #0f172a; font-size: 12px; letter-spacing: 0.5px; text-transform: uppercase;">👤 Dados do Cliente & Veículo</h4>
+            <h4 style="margin: 0 0 8px 0; color: #0f172a; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px;">👤 Dados do Cliente & Veículo</h4>
             <p style="margin: 4px 0; font-size: 13px;"><b>Proprietário / Carro:</b> {nome_cliente}</p>
             <p style="margin: 4px 0; font-size: 13px;"><b>WhatsApp:</b> {telefone_cliente} <span style="color: #cbd5e1; margin: 0 6px;">|</span> <b>CPF:</b> {cpf_cliente}</p>
         </div>
         
         <div style="border-top: 1px solid #f1f5f9; padding-top: 15px; margin-bottom: 20px;">
-            <h4 style="margin: 0 0 8px 0; color: #0f172a; font-size: 12px; letter-spacing: 0.5px; text-transform: uppercase;">🛠️ Discriminação dos Serviços</h4>
+            <h4 style="margin: 0 0 8px 0; color: #0f172a; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px;">🛠️ Discriminação dos Serviços</h4>
             <div style="font-size: 13px; background-color: #f8fafc; padding: 12px; border-left: 4px solid #ea580c; border-radius: 6px; line-height: 1.5; color: #334155;">
                 {texto_servicos}
             </div>
@@ -60,25 +64,19 @@ def gerar_recibo_impressao(nome_cliente, detalhes_os, nome_oficina, telefone_cli
         
         <div style="border-top: 2px dashed #e2e8f0; padding-top: 12px; text-align: right; margin-bottom: 15px;">
             <span style="font-size: 14px; font-weight: 600; color: #475569;">Valor Total do Investimento:</span>
-            <span style="font-size: 20px; font-weight: 700; color: #ea580c; margin-left: 10px;">{valor_total_print or 'Consulte a OS'}</span>
+            <span style="font-size: 20px; font-weight: 700; color: #ea580c; margin-left: 10px;">{valor_total_print}</span>
         </div>
         
         <div style="text-align: center; border-top: 1px solid #f1f5f9; padding-top: 15px; margin-top: 15px;">
             <p style="margin: 0; font-size: 12px; color: #64748b; font-weight: 500;">Volte sempre! Agradecemos a preferência e a confiança.</p>
         </div>
     </div>
-    """
-    st.markdown(html_recibo, unsafe_allow_html=True)
+    """, unsafe_allow_html=True)
     
-    # Injetado script inline simples para disparar a janela de impressora nativa do sistema em 1 clique
+    # Botão de gatilho javascript limpo e isolado de chaves f-string
     st.components.v1.html(
         """
-        <script>
-        function imprimirRecibo() {
-            window.print();
-        }
-        </script>
-        <div style="text-align: center; margin-top: 10px;">
+        <div style="text-align: center; margin-top: 5px;">
             <button onclick="window.parent.print()" style="background-color: #ea580c; color: white; border: none; padding: 10px 20px; font-size: 14px; font-weight: 600; border-radius: 8px; cursor: pointer; box-shadow: 0 2px 4px rgba(234, 88, 12, 0.2);">🖨️ Acionar Impressora / Salvar PDF</button>
         </div>
         """,
