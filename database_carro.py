@@ -1,10 +1,11 @@
-# database_carro.py - Forcando atualizacao mestre
+# database_carro.py
 import requests
 import pandas as pd
 import re
 
-SUPABASE_URL = "rjrafbwuolmuvnzmqaks.supabase.co"
-SUPABASE_KEY = ""eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJoenJhbW1oc2xvdXd1dXJhZ29wIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI4OTgwMzUsImV4cCI6MjEwODQ3NDAzNX0.ZXbhYTGH1HdeMrI9hVDXFnp02zSpbbGzlo6wbc1mO8o""
+# Sintonizada a fiação mestre correta e saudável provada no print
+SUPABASE_URL = "https://rhzrammhslouwuuragop.supabase.co"
+SUPABASE_KEY = "sb_publishable_q_jv6ihPC2AjJtMedXcawQ_XiDOf0mH"
 
 HEADERS = {
     "apikey": SUPABASE_KEY,
@@ -17,7 +18,7 @@ def autenticar_oficina(usuario, senha):
     url = f"{SUPABASE_URL}/rest/v1/oficinas?usuario=eq.{usuario}&senha=eq.{senha}"
     res = requests.get(url, headers=HEADERS)
     if res.status_code == 200 and len(res.json()) > 0:
-        return res.json()[0] # Índice zero injetado cirurgicamente para desempacotar o login do Antonio
+        return res.json()
     return None
 
 def cadastrar_nova_oficina(nome, usuario, senha):
@@ -32,11 +33,11 @@ def salvar_logomarca_oficina(oficina_id, imagem_base64):
     res = requests.patch(url, headers=HEADERS, json=dados)
     return res.status_code == 200
 
-def obter_logomarca_oficina(oficina_id):
+def obtener_logomarca_oficina(oficina_id):
     url = f"{SUPABASE_URL}/rest/v1/oficinas?id=eq.{oficina_id}&select=logomarca_base64"
     res = requests.get(url, headers=HEADERS)
     if res.status_code == 200 and len(res.json()) > 0:
-        return res.json()[0].get('logomarca_base64') # Índice zero de segurança para a logomarca
+        return res.json().get('logomarca_base64')
     return None
 
 def listar_pecas_estoque(oficina_id):
@@ -91,7 +92,7 @@ def atualizar_status_os(os_id, novo_status, oficina_id=None):
         url_os = f"{SUPABASE_URL}/rest/v1/ordens_servico?id=eq.{os_id}&select=descricao_problema"
         res_os = requests.get(url_os, headers=HEADERS)
         if res_os.status_code == 200 and len(res_os.json()) > 0:
-            texto = res_os.json()[0].get("descricao_problema", "")
+            texto = res_os.json().get("descricao_problema", "")
             match = re.search(r'\+\s*Peça:\s*(.+?)\s*\(x(\d+)\)', texto, re.IGNORECASE)
             if match:
                 nome_peca_usada = match.group(1).strip()
