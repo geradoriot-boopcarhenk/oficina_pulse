@@ -190,3 +190,13 @@ elif escolha == "📋 Ordens de Serviço (OS)":
                 
                 c1.write(f"👤 **{nome_c}**")
 
+elif "Perfil" in escolha:
+    st.markdown("### ⚙️ Configurações da Oficina")
+    uploaded_file = st.file_uploader("🖼️ Envie a Logomarca da sua Oficina", type=["png", "jpg", "jpeg"])
+    if uploaded_file is not None:
+        bytes_data = uploaded_file.read()
+        base64_image = base64.b64encode(bytes_data).decode('utf-8')
+        if st.button("💾 Salvar Logomarca", width="stretch"):
+            if db.salvar_logomarca_oficina(oficina_id, base64_image):
+                st.success("🎉 Logomarca salva com sucesso!")
+                st.rerun()
