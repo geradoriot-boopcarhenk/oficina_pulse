@@ -25,7 +25,7 @@ def formatar_telefone(tel):
 def formatar_placa(placa):
     return placa.strip().upper()
 
-def gerar_recibo_impressao(nome_cliente, detalhes_os, nome_oficina, telefone_cliente, cpf_cliente):
+def gerar_recibo_impressao(nome_cliente, detalhes_os, nome_oficina, telephone_cliente, cpf_cliente):
     import datetime
     data_atual = datetime.datetime.now().strftime("%d/%m/%Y - %H:%M")
     
@@ -38,7 +38,7 @@ def gerar_recibo_impressao(nome_cliente, detalhes_os, nome_oficina, telefone_cli
         valor_total_print = f"R$ {match_total.group(1)}"
         
     if " | " in detalhes_os:
-        texto_servicos = detalhes_os.split(" | ")[0].strip()
+        texto_servicos = detalhes_os.split(" | ")[0]
 
     # Layout corporativo premium renderizado em markdown puro para evitar conflito com chaves CSS
     st.markdown(f"""
@@ -52,7 +52,7 @@ def gerar_recibo_impressao(nome_cliente, detalhes_os, nome_oficina, telefone_cli
         <div style="border-top: 2px solid #f1f5f9; padding-top: 15px; margin-bottom: 15px;">
             <h4 style="margin: 0 0 8px 0; color: #0f172a; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px;">👤 Dados do Cliente & Veículo</h4>
             <p style="margin: 4px 0; font-size: 13px;"><b>Proprietário / Carro:</b> {nome_cliente}</p>
-            <p style="margin: 4px 0; font-size: 13px;"><b>WhatsApp:</b> {telefone_cliente} <span style="color: #cbd5e1; margin: 0 6px;">|</span> <b>CPF:</b> {cpf_cliente}</p>
+            <p style="margin: 4px 0; font-size: 13px;"><b>WhatsApp:</b> {telephone_cliente} <span style="color: #cbd5e1; margin: 0 6px;">|</span> <b>CPF:</b> {cpf_cliente}</p>
         </div>
         
         <div style="border-top: 1px solid #f1f5f9; padding-top: 15px; margin-bottom: 20px;">
@@ -82,6 +82,7 @@ def gerar_recibo_impressao(nome_cliente, detalhes_os, nome_oficina, telefone_cli
         """,
         height=60
     )
+
 
 
 if "oficina_autenticada" not in st.session_state:
