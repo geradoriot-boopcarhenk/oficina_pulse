@@ -1,4 +1,4 @@
-# database_carro.py - Sincronizacao Definitiva Unificada de Carros
+# database_carro.py - Sincronizacao SaaS Pro com Painel Mestre e Assinaturas
 import requests
 import pandas as pd
 import re
@@ -17,14 +17,33 @@ def autenticar_oficina(usuario, senha):
     url = f"{SUPABASE_URL}/rest/v1/oficinas?usuario=eq.{usuario}&senha=eq.{senha}"
     res = requests.get(url, headers=HEADERS)
     if res.status_code == 200 and len(res.json()) > 0:
-        return res.json()
+        return res.json()[0]
     return None
 
 def cadastrar_nova_oficina(nome, usuario, senha):
     url = f"{SUPABASE_URL}/rest/v1/oficinas"
-    dados = {"nome_oficina": nome, "usuario": usuario, "senha": senha}
+    # Toda nova oficina ja nasce com status 'Ativo' para teste gratis de 7 dias, salvando a coluna status_pagamento
+    dados = {"nome_oficina": nome, "usuario": usuario, "senha": senha, "status_pagamento": "Ativo"}
     res = requests.post(url, headers=HEADERS, json=dados)
     return res.status_code == 201
+
+def obter_status_assinatura(oficina_id):
+    url = f"{SUPABASE_URL}/rest/v1/oficinas?id=eq.{oficina_id}&select=status_pagamento"
+    res = requests.get(url, headers=HEADERS)
+    if res.status_code == 200 and len(res.json()) > 0:
+        return res.json()[0].get('status_pagamento', 'Ativo')
+    return 'Ativo'
+
+def listar_todas_oficinas():
+    url = f"{SUPABASE_URL}/rest/v1/oficinas?select=id,nome_oficina,usuario,status_pagamento"
+    res = requests.get(url, headers=HEADERS)
+    return res.json() if res.status_code == 200 else []
+
+def alterar_status_oficina(oficina_id, novo_status):
+    url = f"{SUPABASE_URL}/rest/v1/oficinas?id=eq.{oficina_id}"
+    dados = {"status_pagamento": novo_status}
+    res = requests.patch(url, headers=HEADERS, json=dados)
+    return res.status_code == 200
 
 def salvar_logomarca_oficina(oficina_id, imagem_base64):
     url = f"{SUPABASE_URL}/rest/v1/oficinas?id=eq.{oficina_id}"
@@ -32,11 +51,11 @@ def salvar_logomarca_oficina(oficina_id, imagem_base64):
     res = requests.patch(url, headers=HEADERS, json=dados)
     return res.status_code == 200
 
-def obter_logomarca_oficina(oficina_id):
+def obtener_logomarca_oficina(oficina_id):
     url = f"{SUPABASE_URL}/rest/v1/oficinas?id=eq.{oficina_id}&select=logomarca_base64"
     res = requests.get(url, headers=HEADERS)
     if res.status_code == 200 and len(res.json()) > 0:
-        return res.json().get('logomarca_base64')
+        return res.json()[0].get('logomarca_base64')
     return None
 
 def listar_pecas_estoque(oficina_id):
@@ -69,7 +88,6 @@ def cadastrar_cliente(nome, telephone, cpf, oficina_id):
 
 def criar_ordem_servico(cliente_id, descricao, valor_mao_de_obra):
     url = f"{SUPABASE_URL}/rest/v1/ordens_servico"
-    # Cravada em definitivo a coluna correta "cliente_id" do banco de carros
     dados = {
         "cliente_id": cliente_id,
         "descricao_problema": f"{descricao} | Mão de Obra: R$ {valor_mao_de_obra:.2f}",
@@ -88,35 +106,26 @@ def atualizar_status_os(os_id, novo_status, oficina_id=None):
     dados = {"status": novo_status}
     requests.patch(url, headers=HEADERS, json=dados)
     
-    if novo_status == 'Concluído':
-        # Busca a descricao do problema para capturar o nome da peca utilizada
+    if novo_status == 'Concluído' and oficina_id:
         url_os = f"{SUPABASE_URL}/rest/v1/ordens_servico?id=eq.{os_id}&select=descricao_problema"
         res_os = requests.get(url_os, headers=HEADERS)
         if res_os.status_code == 200 and len(res_os.json()) > 0:
-            dados_os = res_os.json()
-            texto = dados_os[0].get("descricao_problema", "") if isinstance(dados_os, list) else dados_os.get("descricao_problema", "")
-            
-            # Captura o padrão de peca gravado: "+ Peça: Nome da Peca (xQuantidade)"
+            texto = res_os.json()[0].get("descricao_problema", "")
             match = re.search(r'\+\s*Peça:\s*(.+?)\s*\(x(\d+)\)', texto, re.IGNORECASE)
             if match:
                 nome_peca_usada = match.group(1).strip()
                 qtd_usada = int(match.group(2))
                 
-                # Busca todas as pecas do estoque geral para localizar o produto correto
-                url_pecas = f"{SUPABASE_URL}/rest/v1/estoque_pecas?select=*"
-                res_p = requests.get(url_pecas, headers=HEADERS)
-                if res_p.status_code == 200:
-                    for p in res_p.json():
-                        nome_banco = p.get('nome_peca') or p.get('nome_peça') or ""
-                        if nome_banco.strip().lower() == nome_peca_usada.lower():
-                            qtd_banco = p.get('quantidade') or p.get('quantidade_atual') or 0
-                            nova_qtd = max(0, int(qtd_banco) - qtd_usada)
-                            
-                            # Executa a baixa automatica na coluna correta do banco de carros
-                            url_update = f"{SUPABASE_URL}/rest/v1/estoque_pecas?id=eq.{p['id']}"
-                            campo_qtd = 'quantidade' if 'quantidade' in p else 'quantidade_atual'
-                            requests.patch(url_update, headers=HEADERS, json={campo_qtd: int(nova_qtd)})
-                            break
+                pecas_totais = listar_pecas_estoque(oficina_id)
+                for p in pecas_totais:
+                    nome_banco = p.get('nome_peça') or p.get('nome_peca') or ""
+                    if nome_banco.strip().lower() == nome_peca_usada.lower():
+                        qtd_banco = p.get('quantidade_atual') or p.get('quantidade') or 0
+                        nova_qtd = max(0, int(qtd_banco) - qtd_usada)
+                        url_update = f"{SUPABASE_URL}/rest/v1/estoque_pecas?id=eq.{p['id']}"
+                        campo_qtd = 'quantidade' if 'quantidade' in p else 'quantidade_atual'
+                        requests.patch(url_update, headers=HEADERS, json={campo_qtd: int(nova_qtd)})
+                        break
 
 def contar_os_por_status(status):
     url = f"{SUPABASE_URL}/rest/v1/ordens_servico?status=eq.{status}&select=id"
