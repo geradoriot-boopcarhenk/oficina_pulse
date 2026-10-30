@@ -25,11 +25,11 @@ def formatar_telefone(tel):
 def formatar_placa(placa):
     return placa.strip().upper()
 
-def gerar_recibo_impressao(nome_cliente, detalhes_os, nome_oficina, telephone_cliente, cpf_cliente):
+def gerar_recibo_impressao(nome_cliente, detalhes_os, nome_oficina, telefone_cliente, cpf_cliente):
     import datetime
     data_atual = datetime.datetime.now().strftime("%d/%m/%Y - %H:%M")
     
-    # Extração segura e limpa do valor e descrição dos serviços
+    # Processamento visual limpo
     texto_servicos = detalhes_os
     valor_total_print = "R$ 0,00"
     
@@ -40,31 +40,31 @@ def gerar_recibo_impressao(nome_cliente, detalhes_os, nome_oficina, telephone_cl
     if " | " in detalhes_os:
         texto_servicos = detalhes_os.split(" | ")[0]
 
-    # Chaves CSS duplicadas ({{ e }}) para blindar a f-string contra interpretador puro
-    html_recibo = f"""
+    # HTML Puro sem f-string para blindar completamente os estilos CSS
+    template_html = """
     <div style="padding: 25px; border: 1px solid #e2e8f0; border-radius: 12px; font-family: sans-serif; background-color: #ffffff; color: #1e293b; max-width: 650px; margin: 0 auto; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);">
         <div style="text-align: center; margin-bottom: 20px;">
             <h2 style="margin: 0; color: #ea580c; font-size: 22px; font-weight: 700;">📋 COMPROVANTE DE SERVIÇO</h2>
-            <p style="margin: 4px 0 0 0; font-size: 14px; font-weight: 600; color: #475569;">{nome_oficina.upper()}</p>
-            <p style="margin: 2px 0 0 0; font-size: 11px; color: #94a3b8;">Emissão: {data_atual} | Ecossistema Pulse SaaS</p>
+            <p style="margin: 4px 0 0 0; font-size: 14px; font-weight: 600; color: #475569;">__NOME_OFICINA__</p>
+            <p style="margin: 2px 0 0 0; font-size: 11px; color: #94a3b8;">Emissão: __DATA_ATUAL__ | Ecossistema Pulse SaaS</p>
         </div>
         
         <div style="border-top: 2px solid #f1f5f9; padding-top: 15px; margin-bottom: 15px;">
             <h4 style="margin: 0 0 8px 0; color: #0f172a; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px;">👤 Dados do Cliente & Veículo</h4>
-            <p style="margin: 4px 0; font-size: 13px;"><b>Proprietário / Carro:</b> {nome_cliente}</p>
-            <p style="margin: 4px 0; font-size: 13px;"><b>WhatsApp:</b> {telephone_cliente} <span style="color: #cbd5e1; margin: 0 6px;">|</span> <b>CPF:</b> {cpf_cliente}</p>
+            <p style="margin: 4px 0; font-size: 13px;"><b>Proprietário / Carro:</b> __NOME_CLIENTE__</p>
+            <p style="margin: 4px 0; font-size: 13px;"><b>WhatsApp:</b> __TELEFONE_CLIENTE__ <span style="color: #cbd5e1; margin: 0 6px;">|</span> <b>CPF:</b> __CPF_CLIENTE__</p>
         </div>
         
         <div style="border-top: 1px solid #f1f5f9; padding-top: 15px; margin-bottom: 20px;">
             <h4 style="margin: 0 0 8px 0; color: #0f172a; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px;">🛠️ Discriminação dos Serviços</h4>
             <div style="font-size: 13px; background-color: #f8fafc; padding: 12px; border-left: 4px solid #ea580c; border-radius: 6px; line-height: 1.5; color: #334155;">
-                {texto_servicos}
+                __TEXTO_SERVICOS__
             </div>
         </div>
         
         <div style="border-top: 2px dashed #e2e8f0; padding-top: 12px; text-align: right; margin-bottom: 15px;">
             <span style="font-size: 14px; font-weight: 600; color: #475569;">Valor Total do Investimento:</span>
-            <span style="font-size: 20px; font-weight: 700; color: #ea580c; margin-left: 10px;">{valor_total_print}</span>
+            <span style="font-size: 20px; font-weight: 700; color: #ea580c; margin-left: 10px;">__VALOR_TOTAL__</span>
         </div>
         
         <div style="text-align: center; border-top: 1px solid #f1f5f9; padding-top: 15px; margin-top: 15px;">
@@ -72,8 +72,19 @@ def gerar_recibo_impressao(nome_cliente, detalhes_os, nome_oficina, telephone_cl
         </div>
     </div>
     """
-    st.markdown(html_recibo, unsafe_allow_html=True)
+
+    # Injeção manual de variáveis via replace para não quebrar o layout
+    html_final = template_html.replace("__NOME_OFICINA__", nome_oficina.upper())\
+                              .replace("__DATA_ATUAL__", data_atual)\
+                              .replace("__NOME_CLIENTE__", nome_cliente)\
+                              .replace("__TELEFONE_CLIENTE__", telefone_cliente)\
+                              .replace("__CPF_CLIENTE__", cpf_cliente)\
+                              .replace("__TEXTO_SERVICOS__", texto_servicos)\
+                              .replace("__VALOR_TOTAL__", valor_total_print)
+
+    st.markdown(html_final, unsafe_allow_html=True)
     
+    # Botão de impressão nativo
     st.components.v1.html(
         """
         <div style="text-align: center; margin-top: 5px;">
