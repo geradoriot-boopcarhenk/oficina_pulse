@@ -1,9 +1,8 @@
-# database_carro.py
+# database_carro.py - Sincronizacao Definitiva Unificada de Carros
 import requests
 import pandas as pd
 import re
 
-# Sintonizada a fiação mestre correta e saudável provada no print
 SUPABASE_URL = "https://rhzrammhslouwuuragop.supabase.co"
 SUPABASE_KEY = "sb_publishable_q_jv6ihPC2AjJtMedXcawQ_XiDOf0mH"
 
@@ -33,7 +32,7 @@ def salvar_logomarca_oficina(oficina_id, imagem_base64):
     res = requests.patch(url, headers=HEADERS, json=dados)
     return res.status_code == 200
 
-def obtener_logomarca_oficina(oficina_id):
+def obter_logomarca_oficina(oficina_id):
     url = f"{SUPABASE_URL}/rest/v1/oficinas?id=eq.{oficina_id}&select=logomarca_base64"
     res = requests.get(url, headers=HEADERS)
     if res.status_code == 200 and len(res.json()) > 0:
@@ -70,8 +69,9 @@ def cadastrar_cliente(nome, telephone, cpf, oficina_id):
 
 def criar_ordem_servico(cliente_id, descricao, valor_mao_de_obra):
     url = f"{SUPABASE_URL}/rest/v1/ordens_servico"
+    # Cravada em definitivo a coluna correta "cliente_id" do banco de carros
     dados = {
-        "moto_id": cliente_id,
+        "cliente_id": cliente_id,
         "descricao_problema": f"{descricao} | Mão de Obra: R$ {valor_mao_de_obra:.2f}",
         "status": "Pendente"
     }
