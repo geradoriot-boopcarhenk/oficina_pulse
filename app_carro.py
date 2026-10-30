@@ -92,7 +92,6 @@ def gerar_recibo_impressao(nome_cliente, detalhes_os, nome_oficina, telefone_cli
         height=60
     )
 
-
 if "oficina_autenticada" not in st.session_state:
     st.session_state["oficina_autenticada"] = None
 
