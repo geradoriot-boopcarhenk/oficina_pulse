@@ -62,7 +62,7 @@ if not st.session_state["oficina_autenticada"]:
             st.rerun()
         else:
             st.error("❌ Credenciais incorretas!")
-    st.stop()
+    # st.stop()
 
 oficina_id = st.session_state["oficina_autenticada"]["id"]
 nome_oficina_ativa = st.session_state["oficina_autenticada"]["nome_oficina"]
