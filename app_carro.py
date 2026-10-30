@@ -92,10 +92,11 @@ if st.session_state["modo_admin"]:
     st.stop()
 
 # ----------------- FLUXO DO CLIENTE (OFICINA MECANICA) -----------------
-oficina_id = st.session_state["oficina_autenticada"]["id"]
-nome_oficina_ativa = st.session_state["oficina_autenticada"]["nome_oficina"]
+oficina_crua = st.session_state["oficina_autenticada"]
+oficina_dados = oficina_crua[0] if isinstance(oficina_crua, list) and len(oficina_crua) > 0 else oficina_crua
 
-# VERIFICAÇÃO DE FATURAMENTO / TRAVA DE INADIMPLENCIA
+oficina_id = oficina_dados["id"]
+nome_oficina_ativa = oficina_dados["nome_oficina"]
 status_assinatura = db.obter_status_assinatura(oficina_id)
 
 if status_assinatura == 'Bloqueado':
