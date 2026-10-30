@@ -3,7 +3,7 @@ import requests
 import pandas as pd
 import re
 
-SUPABASE_URL = "https://supabase.co"
+SUPABASE_URL = "https://rhzrammhslouwuuragop.supabase.co"
 SUPABASE_KEY = "sb_publishable_q_jv6ihPC2AjJtMedXcawQ_XiDoFsc91b9bCYwX8m8Hj8D1D1"
 
 HEADERS = {
@@ -13,16 +13,16 @@ HEADERS = {
     "Prefer": "return=representation"
 }
 
-def autenticar_oficina(usuario, senha):
-    url = f"{SUPABASE_URL}/rest/v1/oficinas?usuario=eq.{usuario}&senha=eq.{senha}"
+def autenticar_oficina(usuario, senate):
+    url = f"{SUPABASE_URL}/rest/v1/oficinas?usuario=eq.{usuario}&senha=eq.{senate}"
     res = requests.get(url, headers=HEADERS)
     if res.status_code == 200 and len(res.json()) > 0:
         return res.json()[0]
     return None
 
-def cadastrar_nova_oficina(nome, usuario, senha):
+def cadastrar_nova_oficina(nome, usuario, senate):
     url = f"{SUPABASE_URL}/rest/v1/oficinas"
-    dados = {"nome_oficina": nome, "usuario": usuario, "senha": senha}
+    dados = {"nome_oficina": nome, "usuario": usuario, "senha": senate}
     res = requests.post(url, headers=HEADERS, json=dados)
     return res.status_code == 201
 
@@ -91,8 +91,8 @@ def atualizar_status_os(os_id, novo_status, oficina_id=None):
         url_os = f"{SUPABASE_URL}/rest/v1/ordens_servico?id=eq.{os_id}&select=descricao_problema"
         res_os = requests.get(url_os, headers=HEADERS)
         if res_os.status_code == 200 and len(res_os.json()) > 0:
-            texto = res_os.json().get("descricao_problema", "")
-            match = re.search(r'\+\s*Peça:\s*(.+?)\s*\(x(\d+)\)', text, re.IGNORECASE)
+            texto = res_os.json()[0].get("descricao_problema", "")
+            match = re.search(r'\+\s*Peça:\s*(.+?)\s*\(x(\d+)\)', texto, re.IGNORECASE)
             if match:
                 nome_peca_usada = match.group(1).strip()
                 qtd_usada = int(match.group(2))
