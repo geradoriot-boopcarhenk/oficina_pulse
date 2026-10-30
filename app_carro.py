@@ -80,11 +80,17 @@ oficina_dados = st.session_state["oficina_autenticada"]
 oficina_id = oficina_dados[0]["id"] if isinstance(oficina_dados, list) else oficina_dados["id"]
 nome_oficina_ativa = oficina_dados[0]["nome_oficina"] if isinstance(oficina_dados, list) else oficina_dados["nome_oficina"]
 
-logo_data = db.obter_logomarca_oficina(oficina_id)
+# Trava de segurança mestre adicionada para evitar travamentos de resposta da logo
+try:
+    logo_data = db.obter_logomarca_oficina(oficina_id)
+except:
+    logo_data = None
+
 if logo_data:
     st.sidebar.image(f"data:image/png;base64,{logo_data}", use_container_width=True)
 else:
     st.sidebar.markdown(f"### 🏢 {nome_oficina_ativa}")
+
 
 if st.sidebar.button("🚪 Sair / Trocar de Conta"):
     st.session_state["oficina_autenticada"] = None
