@@ -24,7 +24,7 @@ def formatar_telefone(tel):
 def formatar_placa(placa):
     return placa.strip().upper()
 
-def gerar_recibo_impressao(nome_cliente, detalhes_os, nome_oficina, telefone_cliente, cpf_cliente):
+def generar_recibo_impressao(nome_cliente, detalhes_os, nome_oficina, telefone_cliente, cpf_cliente):
     html_recibo = f"""
     <div style="padding: 20px; border: 2px solid #333; border-radius: 10px; font-family: sans-serif; background-color: white; color: black;">
         <h2 style="text-align: center; margin-bottom: 5px; color: #EA580C;">📋 RECIBO DE ORDEM DE SERVIÇO - {nome_oficina.upper()}</h2>
@@ -188,3 +188,4 @@ elif escolha == "📋 Ordens de Serviço (OS)":
                     total_pecas_calculado = 0.0
                     detalhe_peca_texto = ""
                     if peca_selecionada != "Nenhuma":
+                        p_dados = dict_pecas[peca_selecionada]
