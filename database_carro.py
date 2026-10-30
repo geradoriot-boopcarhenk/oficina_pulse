@@ -88,24 +88,35 @@ def atualizar_status_os(os_id, novo_status, oficina_id=None):
     dados = {"status": novo_status}
     requests.patch(url, headers=HEADERS, json=dados)
     
-    if novo_status == 'Concluído' and oficina_id:
+    if novo_status == 'Concluído':
+        # Busca a descricao do problema para capturar o nome da peca utilizada
         url_os = f"{SUPABASE_URL}/rest/v1/ordens_servico?id=eq.{os_id}&select=descricao_problema"
         res_os = requests.get(url_os, headers=HEADERS)
         if res_os.status_code == 200 and len(res_os.json()) > 0:
-            texto = res_os.json()[0].get("descricao_problema", "") if isinstance(res_os.json(), list) and len(res_os.json()) > 0 else res_os.json().get("descricao_problema", "")
+            dados_os = res_os.json()
+            texto = dados_os[0].get("descricao_problema", "") if isinstance(dados_os, list) else dados_os.get("descricao_problema", "")
+            
+            # Captura o padrão de peca gravado: "+ Peça: Nome da Peca (xQuantidade)"
             match = re.search(r'\+\s*Peça:\s*(.+?)\s*\(x(\d+)\)', texto, re.IGNORECASE)
             if match:
                 nome_peca_usada = match.group(1).strip()
                 qtd_usada = int(match.group(2))
                 
-                pecas_totais = listar_pecas_estoque(oficina_id)
-                for p in pecas_totais:
-                    nome_banco = p.get('nome_peça') or p.get('nome_peca') or ""
-                    if nome_banco.strip().lower() == nome_peca_usada.lower():
-                        nova_qtd = max(0, int(p['quantidade_atual']) - qtd_usada)
-                        url_update = f"{SUPABASE_URL}/rest/v1/estoque_pecas?id=eq.{p['id']}"
-                        requests.patch(url_update, headers=HEADERS, json={"quantidade_atual": int(nova_qtd)})
-                        break
+                # Busca todas as pecas do estoque geral para localizar o produto correto
+                url_pecas = f"{SUPABASE_URL}/rest/v1/estoque_pecas?select=*"
+                res_p = requests.get(url_pecas, headers=HEADERS)
+                if res_p.status_code == 200:
+                    for p in res_p.json():
+                        nome_banco = p.get('nome_peca') or p.get('nome_peça') or ""
+                        if nome_banco.strip().lower() == nome_peca_usada.lower():
+                            qtd_banco = p.get('quantidade') or p.get('quantidade_atual') or 0
+                            nova_qtd = max(0, int(qtd_banco) - qtd_usada)
+                            
+                            # Executa a baixa automatica na coluna correta do banco de carros
+                            url_update = f"{SUPABASE_URL}/rest/v1/estoque_pecas?id=eq.{p['id']}"
+                            campo_qtd = 'quantidade' if 'quantidade' in p else 'quantidade_atual'
+                            requests.patch(url_update, headers=HEADERS, json={campo_qtd: int(nova_qtd)})
+                            break
 
 def contar_os_por_status(status):
     url = f"{SUPABASE_URL}/rest/v1/ordens_servico?status=eq.{status}&select=id"
