@@ -3,8 +3,8 @@ import requests
 import pandas as pd
 import re
 
-SUPABASE_URL = "https://supabase.co"
-SUPABASE_KEY = "sb_publishable_q_jv6ihPC2AjJtMedXcawQ_XiDoFsc91b9bCYwX8m8Hj8D1D1"
+SUPABASE_URL = "rjrafbwuolmuvnzmqaks.supabase.co"
+SUPABASE_KEY = ""eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJoenJhbW1oc2xvdXd1dXJhZ29wIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI4OTgwMzUsImV4cCI6MjEwODQ3NDAzNX0.ZXbhYTGH1HdeMrI9hVDXFnp02zSpbbGzlo6wbc1mO8o""
 
 HEADERS = {
     "apikey": SUPABASE_KEY,
