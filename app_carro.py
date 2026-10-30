@@ -26,23 +26,65 @@ def formatar_placa(placa):
     return placa.strip().upper()
 
 def gerar_recibo_impressao(nome_cliente, detalhes_os, nome_oficina, telefone_cliente, cpf_cliente):
+    import datetime
+    data_atual = datetime.datetime.now().strftime("%d/%m/%Y - %H:%M")
+    
+    # Processamento visual de quebra de valores para o subtotal
+    texto_servicos = detalhes_os
+    valor_total_print = ""
+    match_total = re.search(r'Mão de Obra:\s*R\$\s*([\d.,]+)', detalhes_os, re.IGNORECASE)
+    if match_total:
+        valor_total_print = f"R$ {match_total.group(1)}"
+        texto_servicos = detalhes_os.split('|')[0].strip()
+
     html_recibo = f"""
-    <div style="padding: 20px; border: 2px solid #333; border-radius: 10px; font-family: sans-serif; background-color: white; color: black;">
-        <h2 style="text-align: center; margin-bottom: 5px; color: #EA580C;">📋 RECIBO DE ORDEM DE SERVIÇO - {nome_oficina.upper()}</h2>
-        <p style="text-align: center; font-size: 12px; color: #555; margin-top: 0;">Ecossistema Digital Pulse SaaS</p>
-        <hr style="border: 1px solid #333;">
-        <h4>👤 DADOS DO CLIENTE & VEÍCULO:</h4>
-        <p><b>Nome / Veículo:</b> {nome_cliente}</p>
-        <p><b>WhatsApp:</b> {telefone_cliente} | <b>CPF:</b> {cpf_cliente}</p>
-        <hr style="border: 1px dashed #ccc;">
-        <h4>🛠️ DETALHES DOS SERVIÇOS E PRODUTOS:</h4>
-        <p style="font-size: 16px; background-color: #f9f9f9; padding: 15px; border-left: 5px solid #EA580C; border-radius: 4px;">{detalhes_os}</p>
-        <br>
-        <p style="text-align: center; font-size: 11px; color: #777;">Obrigado pela preferência! Volte sempre.</p>
+    <div style="padding: 25px; border: 1px solid #e2e8f0; border-radius: 12px; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #ffffff; color: #1e293b; max-width: 650px; margin: 0 auto; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);">
+        <div style="text-align: center; margin-bottom: 20px;">
+            <h2 style="margin: 0; color: #ea580c; font-size: 22px; font-weight: 700; letter-spacing: -0.5px;">📋 COMPROVANTE DE SERVIÇO</h2>
+            <p style="margin: 4px 0 0 0; font-size: 14px; font-weight: 600; color: #475569;">{nome_oficina.upper()}</p>
+            <p style="margin: 2px 0 0 0; font-size: 11px; color: #94a3b8;">Emissão: {data_atual} | Ecossistema Pulse SaaS</p>
+        </div>
+        
+        <div style="border-top: 2px solid #f1f5f9; padding-top: 15px; margin-bottom: 15px;">
+            <h4 style="margin: 0 0 8px 0; color: #0f172a; font-size: 12px; letter-spacing: 0.5px; text-transform: uppercase;">👤 Dados do Cliente & Veículo</h4>
+            <p style="margin: 4px 0; font-size: 13px;"><b>Proprietário / Carro:</b> {nome_cliente}</p>
+            <p style="margin: 4px 0; font-size: 13px;"><b>WhatsApp:</b> {telefone_cliente} <span style="color: #cbd5e1; margin: 0 6px;">|</span> <b>CPF:</b> {cpf_cliente}</p>
+        </div>
+        
+        <div style="border-top: 1px solid #f1f5f9; padding-top: 15px; margin-bottom: 20px;">
+            <h4 style="margin: 0 0 8px 0; color: #0f172a; font-size: 12px; letter-spacing: 0.5px; text-transform: uppercase;">🛠️ Discriminação dos Serviços</h4>
+            <div style="font-size: 13px; background-color: #f8fafc; padding: 12px; border-left: 4px solid #ea580c; border-radius: 6px; line-height: 1.5; color: #334155;">
+                {texto_servicos}
+            </div>
+        </div>
+        
+        <div style="border-top: 2px dashed #e2e8f0; padding-top: 12px; text-align: right; margin-bottom: 15px;">
+            <span style="font-size: 14px; font-weight: 600; color: #475569;">Valor Total do Investimento:</span>
+            <span style="font-size: 20px; font-weight: 700; color: #ea580c; margin-left: 10px;">{valor_total_print or 'Consulte a OS'}</span>
+        </div>
+        
+        <div style="text-align: center; border-top: 1px solid #f1f5f9; padding-top: 15px; margin-top: 15px;">
+            <p style="margin: 0; font-size: 12px; color: #64748b; font-weight: 500;">Volte sempre! Agradecemos a preferência e a confiança.</p>
+        </div>
     </div>
     """
     st.markdown(html_recibo, unsafe_allow_html=True)
-    st.button("🖨️ Acionar Impressora / Salvar PDF", on_click=st.dialog("Instruções: Pressione Ctrl + P na sua tela para salvar como PDF instantaneamente!"))
+    
+    # Injetado script inline simples para disparar a janela de impressora nativa do sistema em 1 clique
+    st.components.v1.html(
+        """
+        <script>
+        function imprimirRecibo() {
+            window.print();
+        }
+        </script>
+        <div style="text-align: center; margin-top: 10px;">
+            <button onclick="window.parent.print()" style="background-color: #ea580c; color: white; border: none; padding: 10px 20px; font-size: 14px; font-weight: 600; border-radius: 8px; cursor: pointer; box-shadow: 0 2px 4px rgba(234, 88, 12, 0.2);">🖨️ Acionar Impressora / Salvar PDF</button>
+        </div>
+        """,
+        height=60
+    )
+
 
 if "oficina_autenticada" not in st.session_state:
     st.session_state["oficina_autenticada"] = None
