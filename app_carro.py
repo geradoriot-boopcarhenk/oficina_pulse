@@ -212,12 +212,6 @@ elif escolha == "📋 Ordens de Serviço (OS)":
                         st.rerun()
                 else:
                     c3.markdown("🟢 **Concluído**")
-                    if c4.button("📄 Recibo", key=f"rec_{os_item['id']}"):
-                        st.session_state["visualizar_recibo"] = {"nome": nome_c, "desc": os_item['descricao_problema'], "tel": tel_c, "cpf": cpf_c}
-            if st.session_state["visualizar_recibo"]:
-                st.write("---")
-                r = st.session_state["visualizar_recibo"]
-                gerar_recibo_impressao(r["nome"], r["desc"], nome_oficina_ativa, r["tel"], r["cpf"])
                 if st.button("❌ Fechar Visualização de Recibo"):
                     st.session_state["visualizar_recibo"] = None
                     st.rerun()
