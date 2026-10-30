@@ -17,7 +17,7 @@ def autenticar_oficina(usuario, senha):
     url = f"{SUPABASE_URL}/rest/v1/oficinas?usuario=eq.{usuario}&senha=eq.{senha}"
     res = requests.get(url, headers=HEADERS)
     if res.status_code == 200 and len(res.json()) > 0:
-        return res.json()[0] # Índice zero de segurança inserido
+        return res.json()[0]
     return None
 
 def cadastrar_nova_oficina(nome, usuario, senha):
@@ -32,11 +32,11 @@ def salvar_logomarca_oficina(oficina_id, imagem_base64):
     res = requests.patch(url, headers=HEADERS, json=dados)
     return res.status_code == 200
 
-def obter_logomarca_oficina(oficina_id):
+def obtener_logomarca_oficina(oficina_id):
     url = f"{SUPABASE_URL}/rest/v1/oficinas?id=eq.{oficina_id}&select=logomarca_base64"
     res = requests.get(url, headers=HEADERS)
     if res.status_code == 200 and len(res.json()) > 0:
-        return res.json()[0].get('logomarca_base64') # Índice zero de segurança inserido
+        return res.json()[0].get('logomarca_base64')
     return None
 
 def listar_pecas_estoque(oficina_id):
