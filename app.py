@@ -24,7 +24,7 @@ def formatar_telefone(tel):
 def formatar_placa(placa):
     return placa.strip().upper()
 
-def gerar_recibo_impressao(nome_cliente, detalhes_os, nome_oficina, telephone_cliente, cpf_cliente):
+def generar_recibo_impressao(nome_cliente, detalhes_os, nome_oficina, telephone_cliente, cpf_cliente):
     html_recibo = f"""
     <div style="padding: 20px; border: 2px solid #333; border-radius: 10px; font-family: sans-serif; background-color: white; color: black;">
         <h2 style="text-align: center; margin-bottom: 5px; color: #F97316;">📋 RECIBO DE ORDEM DE SERVIÇO - {nome_oficina.upper()}</h2>
@@ -77,7 +77,7 @@ if st.sidebar.button("🚪 Sair / Trocar de Conta"):
     st.rerun()
 
 st.title(f"🏍️ Gestão Integrada - {nome_oficina_ativa}")
-menu = ["Painel Geral", "Clientes & Motos", "Estoque de Peças", "📋 Ordens de Serviço (OS)", "⚙️ Perfil da Oficina"]
+menu = ["Painel Geral", "Clientes & Motos", "Estoque de Peças", "📋 Ordens de Serviço (OS)", "📜 Histórico de Clientes", "⚙️ Perfil da Oficina"]
 escolha = st.sidebar.selectbox("Mapeamento do Sistema", menu)
 
 if escolha == "Painel Geral":
@@ -189,14 +189,3 @@ elif escolha == "📋 Ordens de Serviço (OS)":
                 cpf_c = cliente_obj.get('cpf', 'Não Informado')
                 
                 c1.write(f"👤 **{nome_c}**")
-
-elif "Perfil" in escolha:
-    st.markdown("### ⚙️ Configurações da Oficina")
-    uploaded_file = st.file_uploader("🖼️ Envie a Logomarca da sua Oficina", type=["png", "jpg", "jpeg"])
-    if uploaded_file is not None:
-        bytes_data = uploaded_file.read()
-        base64_image = base64.b64encode(bytes_data).decode('utf-8')
-        if st.button("💾 Salvar Logomarca", width="stretch"):
-            if db.salvar_logomarca_oficina(oficina_id, base64_image):
-                st.success("🎉 Logomarca salva com sucesso!")
-                st.rerun()
