@@ -34,7 +34,7 @@ def obter_status_assinatura(oficina_id):
     return 'Ativo'
 
 def listar_todas_oficinas():
-    url = f"{SUPABASE_URL}/rest/v1/oficinas?select=id,nome_oficina,usuario,status_pagamento"
+    url = f"{SUPABASE_URL}/rest/v1/oficinas?select=id,nome_oficina,usuario,status"
     res = requests.get(url, headers=HEADERS)
     return res.json() if res.status_code == 200 else []
 
