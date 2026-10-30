@@ -193,3 +193,84 @@ elif escolha == "📋 Ordens de Serviço (OS)":
                 peca_selecionada = "Nenhuma"
                 qtd_peca = 0
             valor_mao_de_obra = st.number_input("Valor da Mão de Obra / Serviço (R$)", min_value=0.0, value=100.0)
+            if st.form_submit_button("Gerar Nova OS"):
+                if descricao_problema:
+                    total_pecas_calculado = 0.0
+                    detalhe_peca_texto = ""
+                    if peca_selecionada != "Nenhuma":
+                        p_dados = dict_pecas[peca_selecionada]
+                        total_pecas_calculado = float(p_dados.get('preco_venda', 0.0)) * qtd_peca
+                        detalhe_peca_texto = f" + Peça: {peca_selecionada} (x{qtd_peca})"
+                    
+                    valor_total_os = valor_mao_de_obra + total_pecas_calculado
+                    descricao_final = f"{descricao_problema}{detalhe_peca_texto}"
+                    db.criar_ordem_servico(dict_clientes[cliente_selecionado], descricao_final, valor_total_os)
+                    st.success(f"✅ OS Registrada! Valor Total do Orçamento: R$ {valor_total_os:,.2f}")
+                    st.rerun()
+                else:
+                    st.error("⚠️ Insira a descrição do problema!")
+        st.write("---")
+        st.markdown("#### 📋 Histórico de Ordens de Serviço Ativas")
+        if "visualizar_recibo" not in st.session_state: st.session_state["visualizar_recibo"] = None
+        lista_os = db.listar_ordens_servico()
+        if lista_os:
+            for os_item in lista_os:
+                c1, c2, c3, c4 = st.columns([1.5, 2, 1, 1])
+                cliente_obj = os_item.get('clientes', {}) or {}
+                nome_c = cliente_obj.get('nome', 'Cliente')
+                tel_c = cliente_obj.get('telefone', 'Não Informado')
+                cpf_c = cliente_obj.get('cpf', 'Não Informado')
+                
+                c1.write(f"👤 **{nome_c}**")
+                c2.write(f"📄 {os_item['descricao_problema']}")
+                if os_item['status'] == 'Pendente':
+                    if c3.button("🏁 Concluir Serviço", key=f"btn_{os_item['id']}"):
+                        db.atualizar_status_os(os_item['id'], 'Concluído', oficina_id=oficina_id)
+                        st.success("🎉 OS Concluída!")
+                        st.rerun()
+                else:
+                    c3.markdown("🟢 **Concluído**")
+                    if c4.button("📄 Recibo", key=f"rec_{os_item['id']}"):
+                        st.session_state["visualizar_recibo"] = {"nome": nome_c, "desc": os_item['descricao_problema'], "tel": tel_c, "cpf": cpf_c}
+            if st.session_state["visualizar_recibo"]:
+                st.write("---")
+                r = st.session_state["visualizar_recibo"]
+                gerar_recibo_impressao(r["nome"], r["desc"], nome_oficina_ativa, r["tel"], r["cpf"])
+                if st.button("❌ Fechar Visualização de Recibo"):
+                    st.session_state["visualizar_recibo"] = None
+                    st.rerun()
+
+elif escolha == "📜 Histórico de Clientes":
+    st.markdown("### 📜 Histórico de Serviços Realizados por Cliente")
+    st.write("---")
+    lista_c = db.listar_clientes(oficina_id)
+    lista_os = db.listar_ordens_servico()
+    if not lista_c:
+        st.info("💡 Nenhum cliente cadastrado no sistema ainda.")
+    else:
+        dict_clientes = {c['nome']: c['id'] for c in lista_c}
+        cliente_selecionado = st.selectbox("Selecione o Cliente / Veículo para puxar a ficha:", list(dict_clientes.keys()))
+        id_cliente_busca = dict_clientes[cliente_selecionado]
+        os_filtradas = [os for os in lista_os if os.get('cliente_id') == id_cliente_busca and os.get('status') == 'Concluído']
+        if os_filtradas:
+            st.markdown(f"#### 🛠️ Ficha de Serviços de: **{cliente_selecionado}**")
+            dados_tabela = []
+            for item in os_filtradas:
+                texto_problema = item['descricao_problema']
+                match_valor = re.search(r'Mão de Obra: R\$ ([\d.]+)', texto_problema, re.IGNORECASE)
+                valor_exibicao = f"R$ {float(match_valor.group(1)):,.2f}" if match_valor else "Não informado"
+                dados_tabela.append({"Ordem de Serviço / Defeito Relatado": texto_problema, "Valor Total": valor_exibicao})
+            st.dataframe(pd.DataFrame(dados_tabela), width="stretch", hide_index=True)
+        else:
+            st.warning(f"⚠️ Nenhuma Ordem de Serviço concluída foi encontrada para {cliente_selecionado} ainda.")
+
+elif "Perfil" in escolha:
+    st.markdown("### ⚙️ Configurações da Oficina")
+    uploaded_file = st.file_uploader("🖼️ Envie a Logomarca da sua Oficina", type=["png", "jpg", "jpeg"])
+    if uploaded_file is not None:
+        bytes_data = uploaded_file.read()
+        base64_image = base64.b64encode(bytes_data).decode('utf-8')
+        if st.button("💾 Salvar Logomarca", width="stretch"):
+            if db.salvar_logomarca_oficina(oficina_id, base64_image):
+                st.success("🎉 Logomarca updated!")
+                st.rerun()
