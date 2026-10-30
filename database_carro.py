@@ -4,7 +4,7 @@ import pandas as pd
 import re
 
 SUPABASE_URL = "https://supabase.co"
-SUPABASE_KEY = "sb_publishable_q_jv6ihPC2AjJtMedM4yZ3738SgscwXjT6Hj9pA9qDhc8b5VbY7H8m1N2"
+SUPABASE_KEY = "sb_publishable_q_jv6ihPC2AjJtMedXcawQ_XiDoFsc91b9bCYwX8m8Hj8D1D1"
 
 HEADERS = {
     "apikey": SUPABASE_KEY,
