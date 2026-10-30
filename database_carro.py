@@ -1,4 +1,4 @@
-# database_carro.py - Versao Enterprise SaaS Resiliente
+k# database_carro.py
 import requests
 import pandas as pd
 import re
@@ -30,22 +30,13 @@ def obter_status_assinatura(oficina_id):
     url = f"{SUPABASE_URL}/rest/v1/oficinas?id=eq.{oficina_id}&select=status_pagamento"
     res = requests.get(url, headers=HEADERS)
     if res.status_code == 200 and len(res.json()) > 0:
-        status = res.json()[0].get('status_pagamento')
-        return status if status else 'Ativo'
+        return res.json()[0].get('status_pagamento', 'Ativo')
     return 'Ativo'
 
 def listar_todas_oficinas():
-    url = f"{SUPABASE_URL}/rest/v1/oficinas?select=*"
+    url = f"{SUPABASE_URL}/rest/v1/oficinas?select=id,nome_oficina,usuario,status_pagamento"
     res = requests.get(url, headers=HEADERS)
-    if res.status_code == 200:
-        dados_tratados = []
-        for ofi in res.json():
-            # Força o status comercial a vir ativo caso a coluna esteja vazia no Supabase
-            status = ofi.get('status_pagamento') or ofi.get('status') or 'Ativo'
-            ofi['status_pagamento'] = status
-            dados_tratados.append(ofi)
-        return dados_tratados
-    return []
+    return res.json() if res.status_code == 200 else []
 
 def alterar_status_oficina(oficina_id, novo_status):
     url = f"{SUPABASE_URL}/rest/v1/oficinas?id=eq.{oficina_id}"
@@ -59,7 +50,7 @@ def salvar_logomarca_oficina(oficina_id, imagem_base64):
     res = requests.patch(url, headers=HEADERS, json=dados)
     return res.status_code == 200
 
-def obtener_logomarca_oficina(oficina_id):
+def obter_logomarca_oficina(oficina_id):
     url = f"{SUPABASE_URL}/rest/v1/oficinas?id=eq.{oficina_id}&select=logomarca_base64"
     res = requests.get(url, headers=HEADERS)
     if res.status_code == 200 and len(res.json()) > 0:
@@ -97,7 +88,7 @@ def cadastrar_cliente(nome, telephone, cpf, oficina_id):
 def criar_ordem_servico(cliente_id, descricao, valor_mao_de_obra):
     url = f"{SUPABASE_URL}/rest/v1/ordens_servico"
     dados = {
-        "cliente_id": cliente_id,,
+        "cliente_id": cliente_id,
         "descricao_problema": f"{descricao} | Mão de Obra: R$ {valor_mao_de_obra:.2f}",
         "status": "Pendente"
     }
