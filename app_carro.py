@@ -74,7 +74,7 @@ if st.session_state["modo_admin"]:
             col_nome.write(f"🏢 **{ofi['nome_oficina']}**")
             col_user.write(f"👤 Usuário: `{ofi['usuario']}`")
             
-            status_atual = ofi.get('status_pagamento', 'Ativo')
+status_atual = ofi.get('status_pagamento') or ofi.get('status') or 'Ativo'
             if status_atual == 'Ativo':
                 col_status.markdown("🟢 **Ativo**")
                 if col_acao.button("🔴 Bloquear Acesso", key=f"bloq_{ofi['id']}"):
