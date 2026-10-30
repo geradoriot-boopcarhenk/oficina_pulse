@@ -3,8 +3,8 @@ import requests
 import pandas as pd
 import re
 
-SUPABASE_URL = "https://rhzrammhslouwuuragop.supabase.co"
-SUPABASE_KEY = "sb_publishable_q_jv6ihPC2AjJtMedXcawQ_XiDOf0mH"
+SUPABASE_URL = "https://supabase.co"
+SUPABASE_KEY = "sb_publishable_q_jv6ihPC2AjJtMedM4yZ3738SgscwXjT6Hj9pA9qDhc8b5VbY7H8m1N2"
 
 HEADERS = {
     "apikey": SUPABASE_KEY,
@@ -17,7 +17,7 @@ def autenticar_oficina(usuario, senha):
     url = f"{SUPABASE_URL}/rest/v1/oficinas?usuario=eq.{usuario}&senha=eq.{senha}"
     res = requests.get(url, headers=HEADERS)
     if res.status_code == 200 and len(res.json()) > 0:
-        return res.json()
+        return res.json()[0] # Índice zero de segurança inserido
     return None
 
 def cadastrar_nova_oficina(nome, usuario, senha):
@@ -36,7 +36,7 @@ def obter_logomarca_oficina(oficina_id):
     url = f"{SUPABASE_URL}/rest/v1/oficinas?id=eq.{oficina_id}&select=logomarca_base64"
     res = requests.get(url, headers=HEADERS)
     if res.status_code == 200 and len(res.json()) > 0:
-        return res.json().get('logomarca_base64')
+        return res.json()[0].get('logomarca_base64') # Índice zero de segurança inserido
     return None
 
 def listar_pecas_estoque(oficina_id):
@@ -69,7 +69,6 @@ def cadastrar_cliente(nome, telephone, cpf, oficina_id):
 
 def criar_ordem_servico(cliente_id, descricao, valor_mao_de_obra):
     url = f"{SUPABASE_URL}/rest/v1/ordens_servico"
-    # Fiação calibrada mudando a chave para o padrão universal 'moto_id' aceito pelo banco de dados
     dados = {
         "moto_id": cliente_id,
         "descricao_problema": f"{descricao} | Mão de Obra: R$ {valor_mao_de_obra:.2f}",
@@ -79,7 +78,6 @@ def criar_ordem_servico(cliente_id, descricao, valor_mao_de_obra):
     return res.status_code == 201
 
 def listar_ordens_servico():
-    # Ajustado o select para carregar o mapeamento unificado do relacionamento de clientes
     url = f"{SUPABASE_URL}/rest/v1/ordens_servico?select=*,clientes(nome,telefone,cpf)"
     res = requests.get(url, headers=HEADERS)
     return res.json() if res.status_code == 200 else []
