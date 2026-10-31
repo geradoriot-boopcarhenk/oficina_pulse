@@ -1,10 +1,12 @@
-# database_carro.py
+# database_carro.py - Sincronizacao SaaS Pro com Segurança de Secrets
 import requests
 import pandas as pd
 import re
+import streamlit as st
 
-SUPABASE_URL = "https://rhzrammhslouwuuragop.supabase.co"
-SUPABASE_KEY = "sb_publishable_q_jv6ihPC2AjJtMedXcawQ_XiDOf0mH"
+# Chaves de infraestrutura lidas direto do cofre seguro da nuvem
+SUPABASE_URL = st.secrets["SUPABASE_URL"]
+SUPABASE_KEY = st.secrets["SUPABASE_KEY"]
 
 HEADERS = {
     "apikey": SUPABASE_KEY,
