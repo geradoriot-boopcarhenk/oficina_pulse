@@ -3,6 +3,7 @@ import requests
 import pandas as pd
 import re
 import streamlit as st
+import bcrypt
 
 # Chaves de infraestrutura lidas direto do cofre seguro da nuvem
 SUPABASE_URL = st.secrets["SUPABASE_URL"]
@@ -16,15 +17,23 @@ HEADERS = {
 }
 
 def autenticar_oficina(usuario, senha):
-    url = f"{SUPABASE_URL}/rest/v1/oficinas?usuario=eq.{usuario}&senha=eq.{senha}"
+    url = f"{SUPABASE_URL}/rest/v1/oficinas?usuario=eq.{usuario}"
     res = requests.get(url, headers=HEADERS)
     if res.status_code == 200 and len(res.json()) > 0:
-        return res.json()
+        oficina = res.json()[0] if isinstance(res.json(), list) else res.json()
+        senha_criptografada = oficina.get("senha", "").encode('utf-8')
+        # Verifica se a senha digitada bate com o hash salvo no banco
+        if bcrypt.checkpw(senha.encode('utf-8'), senha_criptografada):
+            return res.json()
     return None
 
 def cadastrar_nova_oficina(nome, usuario, senha):
     url = f"{SUPABASE_URL}/rest/v1/oficinas"
-    dados = {"nome_oficina": nome, "usuario": usuario, "senha": senha, "status_pagamento": "Ativo"}
+    # Gera o sal e criptografa a senha antes de mandar para o Supabase
+    sal = bcrypt.gensalt()
+    senha_hash = bcrypt.hashpw(senha.encode('utf-8'), sal).decode('utf-8')
+    
+    dados = {"nome_oficina": nome, "usuario": usuario, "senha": senha_hash, "status_pagamento": "Ativo"}
     res = requests.post(url, headers=HEADERS, json=dados)
     return res.status_code == 201
 
