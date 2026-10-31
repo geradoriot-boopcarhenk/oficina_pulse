@@ -3,6 +3,7 @@ import requests
 import pandas as pd
 import re
 import streamlit as st
+import bcrypt
 
 # Chaves lidas direto do cofre seguro da nuvem de motos
 SUPABASE_URL = st.secrets["SUPABASE_URL"]
@@ -16,15 +17,29 @@ HEADERS = {
 }
 
 def autenticar_oficina(usuario, senha):
-    url = f"{SUPABASE_URL}/rest/v1/oficinas?usuario=eq.{usuario}&senha=eq.{senha}"
+    url = f"{SUPABASE_URL}/rest/v1/oficinas?usuario=eq.{usuario}"
     res = requests.get(url, headers=HEADERS)
     if res.status_code == 200 and len(res.json()) > 0:
-        return res.json()
+        oficina = res.json() if isinstance(res.json(), list) else res.json()
+        # Se o banco retornar uma lista, extrai o primeiro índice de forma estável
+        ofi_dados = oficina[0] if isinstance(oficina, list) and len(oficina) > 0 else oficina
+        
+        senha_criptografada = ofi_dados.get("senha", "").encode('utf-8')
+        # Valida a senha digitada contra o hash seguro do banco de dados
+        try:
+            if bcrypt.checkpw(senha.encode('utf-8'), senha_criptografada):
+                return res.json()
+        except:
+            return None
     return None
 
 def cadastrar_nova_oficina(nome, usuario, senha):
     url = f"{SUPABASE_URL}/rest/v1/oficinas"
-    dados = {"nome_oficina": nome, "usuario": usuario, "senha": senha, "status": "Ativo"}
+    # Gera o sal de segurança e tritura a senha antes do envio
+    sal = bcrypt.gensalt()
+    senha_hash = bcrypt.hashpw(senha.encode('utf-8'), sal).decode('utf-8')
+    
+    dados = {"nome_oficina": nome, "usuario": usuario, "senha": senha_hash, "status": "Ativo"}
     res = requests.post(url, headers=HEADERS, json=dados)
     return res.status_code == 201
 
