@@ -1,10 +1,12 @@
-# database.py - Sincronizacao SaaS Pro Motos com Painel Mestre e Assinaturas
+# database.py - Sincronizacao SaaS Pro Motos com Segurança de Secrets
 import requests
 import pandas as pd
 import re
+import streamlit as st
 
-SUPABASE_URL = "https://rjrafbwuolmuvnzmqaks.supabase.co"
-SUPABASE_KEY = "sb_publishable_MoR8dbquEI64xGsiXbkYRg_J9oWrXZw"
+# Chaves lidas direto do cofre seguro da nuvem de motos
+SUPABASE_URL = st.secrets["SUPABASE_URL"]
+SUPABASE_KEY = st.secrets["SUPABASE_KEY"]
 
 HEADERS = {
     "apikey": SUPABASE_KEY,
