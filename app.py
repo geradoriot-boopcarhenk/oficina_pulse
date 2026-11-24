@@ -229,11 +229,32 @@ elif escolha == "📋 Ordens de Serviço (OS)":
             dict_clientes = {c['nome']: c['id'] for c in lista_c}
             cliente_selecionado = st.selectbox("Selecione o Cliente / Moto", list(dict_clientes.keys()))
             descricao_problema = st.text_area("Descrição")
-            valor_mao_de_obra = st.number_input("Valor Serviço (R$)", min_value=0.0, value=100.0)
+            
+            pecas_disp = db.listar_pecas_estoque(oficina_id)
+            opcoes_pecas = {"Nenhuma peça utilizada": None}
+            for p_item in pecas_disp:
+                nome_p = p_item.get("nome_peca") or p_item.get("nome_peça") or "Peça"
+                qtd_p = p_item.get("quantidade") if "quantidade" in p_item else p_item.get("quantidade_atual", 0)
+                preco_v = float(p_item.get("preco_venda") or 0.0)
+                if int(qtd_p) > 0:
+                    opcoes_pecas[f"{nome_p} (Estoque: {qtd_p} | R$ {preco_v:.2f})"] = (nome_p, preco_v, int(qtd_p))
+            
+            col_p1, col_p2 = st.columns((3, 1))
+            peca_esc = col_p1.selectbox("Adicionar Peça do Estoque (Opcional)", list(opcoes_pecas.keys()))
+            qtd_esc = col_p2.number_input("Qtd", min_value=1, value=1, step=1)
+            
+            valor_mao_de_obra = st.number_input("Valor Mão de Obra (R$)", min_value=0.0, value=100.0)
             if st.form_submit_button("Gerar Nova OS"):
                 if descricao_problema:
-                    if db.criar_ordem_servico(dict_clientes[cliente_selecionado], descricao_problema, valor_mao_de_obra):
-                        st.success("✅ OS Registrada!")
+                    desc_final = descricao_problema.strip()
+                    valor_total = float(valor_mao_de_obra)
+                    if opcoes_pecas[peca_esc] is not None:
+                        nome_p, preco_v, qtd_max = opcoes_pecas[peca_esc]
+                        qtd_usar = min(int(qtd_esc), qtd_max)
+                        desc_final += f" + Peça: {nome_p} (x{qtd_usar})"
+                        valor_total += (preco_v * qtd_usar)
+                    if db.criar_ordem_servico(dict_clientes[cliente_selecionado], desc_final, valor_total):
+                        st.success(f"✅ OS Registrada! Valor Total: R$ {valor_total:.2f}")
                         st.rerun()
                         
     st.write("---")
