@@ -39,9 +39,13 @@ def cadastrar_nova_oficina(nome, usuario, senha):
     sal = bcrypt.gensalt()
     senha_hash = bcrypt.hashpw(senha.encode('utf-8'), sal).decode('utf-8')
     
-    dados = {"nome_oficina": nome, "usuario": usuario, "senha": senha_hash, "status": "Ativo"}
+    dados = {"nome_oficina": nome, "usuario": usuario, "senha": senha_hash}
     res = requests.post(url, headers=HEADERS, json=dados)
-    return res.status_code == 201
+    if res.status_code not in [200, 201]:
+        st.error(f"Detalhe do Supabase ({res.status_code}): {res.text}")
+    return res.status_code in [200, 201]
+
+
 
 def obter_status_assinatura(oficina_id):
     url = f"{SUPABASE_URL}/rest/v1/oficinas?id=eq.{oficina_id}&select=*"
