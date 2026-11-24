@@ -123,7 +123,7 @@ def criar_ordem_servico(cliente_id, descricao, valor_mao_de_obra):
     return True
 
 def listar_ordens_servico():
-    url = f"{SUPABASE_URL}/rest/v1/ordens_servico?select=*,clientes(nome,telefone,cpf)"
+    url = f"{SUPABASE_URL}/rest/v1/ordens_servico?select=*"
     res = requests.get(url, headers=HEADERS)
     return res.json() if res.status_code == 200 else []
 
