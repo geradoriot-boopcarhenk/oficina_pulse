@@ -1,5 +1,15 @@
 # app.py - Versao Enterprise SaaS Motos com Painel Mestre e Cobrancas
 import streamlit as st
+st.markdown("""
+<style>
+.stApp {
+    background-image: linear-gradient(rgba(14, 17, 23, 0.86), rgba(14, 17, 23, 0.92)), url("https://unsplash.com");
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+}
+</style>
+""", unsafe_allow_html=True)
 import database as db
 import pandas as pd
 import base64
