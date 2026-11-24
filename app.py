@@ -224,6 +224,23 @@ elif escolha == "📋 Ordens de Serviço (OS)":
             valor_mao_de_obra = st.number_input("Valor Serviço (R$)", min_value=0.0, value=100.0)
             if st.form_submit_button("Gerar Nova OS"):
                 if descricao_problema:
-                    db.criar_ordem_servico(dict_clientes[cliente_selecionado], descricao_problema, valor_mao_de_obra)
-                    st.success("✅ OS Registrada!")
+                    if db.criar_ordem_servico(dict_clientes[cliente_selecionado], descricao_problema, valor_mao_de_obra):
+                        st.success("✅ OS Registrada!")
+                        st.rerun()
+                        
+    st.write("---")
+    st.markdown("### 🔧 Ordens de Serviço Registradas")
+    lista_os = db.listar_ordens_servico()
+    if lista_os:
+        for os_item in lista_os:
+            c1, c2, c3 = st.columns([3, 1, 1])
+            cliente_info = os_item.get("clientes") or {}
+            nome_cli = cliente_info.get("nome", "Cliente") if isinstance(cliente_info, dict) else "Cliente"
+            c1.write(f"**{nome_cli}** — {os_item.get('descricao_problema', '')}")
+            c2.write(f"Status: **{os_item.get('status', 'Pendente')}**")
+            if os_item.get("status") != "Concluído":
+                if c3.button("✅ Concluir", key=f"conc_{os_item['id']}"):
+                    db.atualizar_status_os(os_item["id"], "Concluído", oficina_id)
                     st.rerun()
+    else:
+        st.info("Nenhuma Ordem de Serviço registrada ainda.")

@@ -111,13 +111,16 @@ def cadastrar_cliente(nome, telephone, cpf, oficina_id):
 
 def criar_ordem_servico(cliente_id, descricao, valor_mao_de_obra):
     url = f"{SUPABASE_URL}/rest/v1/ordens_servico"
-    dados = {
-        "moto_id": cliente_id,
-        "descricao_problema": f"{descricao} | Mão de Obra: R$ {valor_mao_de_obra:.2f}",
-        "status": "Pendente"
-    }
-    res = requests.post(url, headers=HEADERS, json=dados)
-    return res.status_code == 201
+    desc_completa = f"{descricao} | Mão de Obra: R$ {valor_mao_de_obra:.2f}"
+    
+    # Tenta gravar com cliente_id primeiro; se a coluna nao existir, tenta moto_id
+    res = requests.post(url, headers=HEADERS, json={"cliente_id": cliente_id, "descricao_problema": desc_completa, "status": "Pendente"})
+    if res.status_code not in:
+        res = requests.post(url, headers=HEADERS, json={"moto_id": cliente_id, "descricao_problema": desc_completa, "status": "Pendente"})
+    if res.status_code not in:
+        st.error(f"Erro Supabase OS ({res.status_code}): {res.text}")
+        return False
+    return True
 
 def listar_ordens_servico():
     url = f"{SUPABASE_URL}/rest/v1/ordens_servico?select=*,clientes(nome,telefone,cpf)"
