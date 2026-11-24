@@ -244,3 +244,38 @@ elif escolha == "📋 Ordens de Serviço (OS)":
                     st.rerun()
     else:
         st.info("Nenhuma Ordem de Serviço registrada ainda.")
+
+elif escolha == "📜 Histórico de Clientes":
+    st.markdown("### 📜 Histórico de Serviços por Cliente / Moto")
+    clientes_hist = db.listar_clientes(oficina_id)
+    todas_os = db.listar_ordens_servico()
+
+    if not clientes_hist:
+        st.info("Nenhum cliente cadastrado ainda.")
+    else:
+        mapa_cli = {c["nome"]: c for c in clientes_hist}
+        selecionado = st.selectbox("Selecione o Cliente / Moto para consultar", list(mapa_cli.keys()))
+        dados_cli = mapa_cli[selecionado]
+
+        col_d1, col_d2 = st.columns(2)
+        col_d1.write(f"**📱 WhatsApp:** {dados_cli.get('telefone', 'Não informado')}")
+        col_d2.write(f"**🪪 CPF:** {dados_cli.get('cpf', 'Não informado')}")
+        st.write("---")
+
+        os_do_cliente = [
+            o for o in todas_os
+            if (o.get("moto_id") == dados_cli["id"] or o.get("cliente_id") == dados_cli["id"])
+        ]
+
+        if os_do_cliente:
+            st.markdown(f"**Total de atendimentos registrados:** {len(os_do_cliente)}")
+            df_hist = pd.DataFrame([
+                {
+                    "Serviço / Descrição": o.get("descricao_problema", ""),
+                    "Status": o.get("status", "Pendente")
+                }
+                for o in os_do_cliente
+            ])
+            st.dataframe(df_hist, use_container_width=True, hide_index=True)
+        else:
+            st.info("Nenhuma Ordem de Serviço registrada para este cliente até o momento.")
