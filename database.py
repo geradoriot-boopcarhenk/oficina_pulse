@@ -43,7 +43,7 @@ def cadastrar_nova_oficina(nome, usuario, senha):
     res = requests.post(url, headers=HEADERS, json=dados)
     if res.status_code not in [200, 201]:
         st.error(f"Detalhe do Supabase ({res.status_code}): {res.text}")
-    return res.status_code in [200, 201]
+    return res.status_code in [200, 201] [200, 201]
 
 
 
@@ -96,17 +96,17 @@ def cadastrar_peca_estoque(oficina_id, nome, qtd, custo, venda):
     return res.status_code == 201
 
 def listar_clientes(oficina_id):
-    url = f"{SUPABASE_URL}/rest/v1/clientes?oficina_id=eq.{oficina_id}&select=*"
+    url = f"{SUPABASE_URL}/rest/v1/clientes?select=*"
     res = requests.get(url, headers=HEADERS)
     return res.json() if res.status_code == 200 else []
 
 def cadastrar_cliente(nome, telephone, cpf, oficina_id):
     url = f"{SUPABASE_URL}/rest/v1/clientes"
-    dados = {"nome": nome, "telefone": telephone, "cpf": cpf, "oficina_id": oficina_id}
+    dados = {"nome": nome, "telefone": telephone, "cpf": cpf}
     res = requests.post(url, headers=HEADERS, json=dados)
     if res.status_code not in [200, 201]:
         st.error(f"Erro Supabase ({res.status_code}): {res.text}")
-    return res.status_code in [200, 201]
+    return res.status_code in [200, 201] [200, 201]
 
 
 def criar_ordem_servico(cliente_id, descricao, valor_mao_de_obra):
