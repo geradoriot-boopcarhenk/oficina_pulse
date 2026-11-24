@@ -188,6 +188,16 @@ elif escolha == "Clientes & Motos":
                 db.cadastrar_cliente(nome_vinculado, tel_formatado, cpf_formatado, oficina_id)
                 st.success("🎉 Proprietário e Moto cadastrados!")
                 st.rerun()
+                
+    st.write("---")
+    st.markdown("### 📋 Clientes & Motos Cadastrados")
+    clientes_salvos = db.listar_clientes(oficina_id)
+    if clientes_salvos:
+        df_clientes = pd.DataFrame(clientes_salvos)[["nome", "cpf", "telefone"]]
+        df_clientes.columns = ["Cliente / Moto / Placa", "CPF", "WhatsApp"]
+        st.dataframe(df_clientes, use_container_width=True, hide_index=True)
+    else:
+        st.info("Nenhum cliente cadastrado ainda.")
 
 elif escolha == "Estoque de Peças":
     st.markdown("### 🗂️ Estoque de Peças")
