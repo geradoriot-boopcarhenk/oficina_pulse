@@ -69,6 +69,17 @@ if st.session_state["modo_admin"]:
     
     oficinas_cadastradas = db.listar_todas_oficinas()
     if oficinas_cadastradas:
+        with st.expander("🖼️ Atualizar Logomarca de uma Oficina"):
+            dict_ofis = {f"{o['nome_oficina']} ({o['usuario']})": o['id'] for o in oficinas_cadastradas}
+            ofi_sel = st.selectbox("Selecione a Oficina", list(dict_ofis.keys()), key="sel_ofi_logo_carro")
+            arq_logo_adm = st.file_uploader("Envie a logo (PNG/JPG)", type=["png", "jpg", "jpeg"], key="up_logo_adm_carro")
+            if arq_logo_adm and st.button("Salvar Logomarca da Oficina", key="btn_logo_adm_carro"):
+                img_b64 = base64.b64encode(arq_logo_adm.read()).decode("utf-8")
+                if db.salvar_logomarca_oficina(dict_ofis[ofi_sel], img_b64):
+                    st.success("✅ Logomarca atualizada com sucesso!")
+                    st.rerun()
+                else:
+                    st.error("❌ Erro ao salvar logomarca no Supabase.")
         for ofi in oficinas_cadastradas:
             col_nome, col_user, col_status, col_acao = st.columns([2, 1.5, 1, 1.5])
             col_nome.write(f"🏢 **{ofi['nome_oficina']}**")
