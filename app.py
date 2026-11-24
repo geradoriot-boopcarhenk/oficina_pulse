@@ -156,8 +156,8 @@ if logo_data:
         f"""
         <style>
         .stApp {{
-            background-image: linear-gradient(rgba(14, 17, 23, 0.88), rgba(14, 17, 23, 0.88)), url("data:image/png;base64,{logo_data}");
-            background-size: min(280px, 65vw);
+            background-image: linear-gradient(rgba(14, 17, 23, 0.85), rgba(14, 17, 23, 0.85)), url("data:image/png;base64,{logo_data}");
+            background-size: cover;
             background-position: center;
             background-repeat: no-repeat;
             background-attachment: fixed;
