@@ -115,9 +115,9 @@ def criar_ordem_servico(cliente_id, descricao, valor_mao_de_obra):
     
     # Tenta gravar com cliente_id primeiro; se a coluna nao existir, tenta moto_id
     res = requests.post(url, headers=HEADERS, json={"cliente_id": cliente_id, "descricao_problema": desc_completa, "status": "Pendente"})
-    if res.status_code not in:
+    if res.status_code not in (200, 201):
         res = requests.post(url, headers=HEADERS, json={"moto_id": cliente_id, "descricao_problema": desc_completa, "status": "Pendente"})
-    if res.status_code not in:
+    if res.status_code not in (200, 201):
         st.error(f"Erro Supabase OS ({res.status_code}): {res.text}")
         return False
     return True
