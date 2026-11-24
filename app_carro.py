@@ -57,7 +57,7 @@ if not st.session_state["oficina_autenticada"] and not st.session_state["modo_ad
 
 # ----------------- TELA MESTRE DO ADMINISTRADOR -----------------
 if st.session_state["modo_admin"]:
-    st.title("👑 Central do Administrador Mestre - Pulse SaaS")
+    st.title("👑 Central do Administrador Mestre - Pulse SaaS Carros")
     st.write("Gerencie os acessos, inadimplências e status de pagamento das oficinas parceiras.")
     
     if st.sidebar.button("🚪 Sair do Modo Admin"):
@@ -65,7 +65,25 @@ if st.session_state["modo_admin"]:
         st.rerun()
         
     st.write("---")
-    st.markdown("### 🏢 Clientes / Oficinas Ativas no Banco")
+    st.markdown("### ➕ Cadastrar Nova Oficina Cliente")
+    with st.form("form_nova_oficina_admin_carro", clear_on_submit=True):
+        col_f1, col_f2, col_f3 = st.columns(3)
+        novo_nome_ofi = col_f1.text_input("Nome da Oficina")
+        novo_user_ofi = col_f2.text_input("Usuário de Acesso")
+        nova_senha_ofi = col_f3.text_input("Senha Inicial", type="password")
+        
+        if st.form_submit_button("Cadastrar Oficina", width="stretch"):
+            if novo_nome_ofi and novo_user_ofi and nova_senha_ofi:
+                if db.cadastrar_nova_oficina(novo_nome_ofi.strip(), novo_user_ofi.strip().lower(), nova_senha_ofi.strip()):
+                    st.success(f"✅ Oficina '{novo_nome_ofi}' cadastrada com senha criptografada!")
+                    st.rerun()
+                else:
+                    st.error("❌ Erro ao cadastrar oficina no Supabase. Verifique se o usuário já existe.")
+            else:
+                st.warning("⚠️ Preencha todos os campos para criar a oficina.")
+    st.write("---")
+    
+    st.markdown("### 🏢 Clientes / Oficinas de Carros Ativas no Banco")
     
     oficinas_cadastradas = db.listar_todas_oficinas()
     if oficinas_cadastradas:
@@ -80,23 +98,13 @@ if st.session_state["modo_admin"]:
                     st.rerun()
                 else:
                     st.error("❌ Erro ao salvar logomarca no Supabase.")
-        with st.expander("🖼️ Atualizar Logomarca de uma Oficina"):
-            dict_ofis = {f"{o['nome_oficina']} ({o['usuario']})": o['id'] for o in oficinas_cadastradas}
-            ofi_sel = st.selectbox("Selecione a Oficina", list(dict_ofis.keys()), key="sel_ofi_logo_carro")
-            arq_logo_adm = st.file_uploader("Envie a logo (PNG/JPG)", type=["png", "jpg", "jpeg"], key="up_logo_adm_carro")
-            if arq_logo_adm and st.button("Salvar Logomarca da Oficina", key="btn_logo_adm_carro"):
-                img_b64 = base64.b64encode(arq_logo_adm.read()).decode("utf-8")
-                if db.salvar_logomarca_oficina(dict_ofis[ofi_sel], img_b64):
-                    st.success("✅ Logomarca atualizada com sucesso!")
-                    st.rerun()
-                else:
-                    st.error("❌ Erro ao salvar logomarca no Supabase.")
+                    
         for ofi in oficinas_cadastradas:
             col_nome, col_user, col_status, col_acao = st.columns([2, 1.5, 1, 1.5])
             col_nome.write(f"🏢 **{ofi['nome_oficina']}**")
             col_user.write(f"👤 Usuário: `{ofi['usuario']}`")
             
-            status_atual = ofi.get('status') or ofi.get('status') or 'Ativo'
+            status_atual = ofi.get('status') or ofi.get('status_pagamento') or 'Ativo'
             if status_atual == 'Ativo':
                 col_status.markdown("🟢 **Ativo**")
                 if col_acao.button("🔴 Bloquear Acesso", key=f"bloq_{ofi['id']}"):
