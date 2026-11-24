@@ -87,6 +87,17 @@ if st.session_state["modo_admin"]:
     
     oficinas_cadastradas = db.listar_todas_oficinas()
     if oficinas_cadastradas:
+        with st.expander("🖼️ Atualizar Logomarca de uma Oficina"):
+            dict_ofis = {f"{o['nome_oficina']} ({o['usuario']})": o['id'] for o in oficinas_cadastradas}
+            ofi_sel = st.selectbox("Selecione a Oficina", list(dict_ofis.keys()))
+            arq_logo_adm = st.file_uploader("Envie a logo (PNG/JPG)", type=["png", "jpg", "jpeg"], key="up_logo_adm")
+            if arq_logo_adm and st.button("Salvar Logomarca da Oficina"):
+                img_b64 = base64.b64encode(arq_logo_adm.read()).decode("utf-8")
+                if db.salvar_logomarca_oficina(dict_ofis[ofi_sel], img_b64):
+                    st.success("✅ Logomarca atualizada com sucesso!")
+                    st.rerun()
+                else:
+                    st.error("❌ Erro ao salvar logomarca no Supabase.")
         for ofi in oficinas_cadastradas:
             col_nome, col_user, col_status, col_acao = st.columns([2, 1.5, 1, 1.5])
             col_nome.write(f"🏢 **{ofi['nome_oficina']}**")
@@ -143,15 +154,7 @@ if logo_data:
     st.sidebar.image(f"data:image/png;base64,{logo_data}", use_container_width=True)
 else:
     st.sidebar.markdown(f"### 🏢 {nome_oficina_ativa}")
-with st.sidebar.expander("🖼️ Alterar Logomarca"):
-    arquivo_logo = st.file_uploader("Envie a logo (PNG/JPG)", type=["png", "jpg", "jpeg"])
-    if arquivo_logo and st.button("Salvar Logomarca"):
-        img_b64 = base64.b64encode(arquivo_logo.read()).decode("utf-8")
-        if db.salvar_logomarca_oficina(oficina_id, img_b64):
-            st.success("✅ Logo atualizada!")
-            st.rerun()
-        else:
-            st.error("❌ Erro ao salvar. Verifique a coluna 'logomarca_base64' no Supabase.")
+
 
 if st.sidebar.button("🚪 Sair / Trocar de Conta"):
     st.session_state["oficina_autenticada"] = None
