@@ -207,9 +207,17 @@ elif escolha == "Estoque de Peças":
         c_u = st.number_input("Preço de Custo (R$)", min_value=0.0)
         v_u = st.number_input("Preço de Venda (R$)", min_value=0.0)
         if st.form_submit_button("Cadastrar") and n_p:
-            db.cadastrar_peca_estoque(oficina_id, n_p, qtd, c_u, v_u)
-            st.success(f"📦 {n_p} adicionada!")
-            st.rerun()
+            if db.cadastrar_peca_estoque(oficina_id, n_p, qtd, c_u, v_u):
+                st.success(f"📦 {n_p} adicionada!")
+                st.rerun()
+                
+    st.write("---")
+    st.markdown("### 📦 Peças em Estoque")
+    pecas_salvas = db.listar_pecas_estoque(oficina_id)
+    if pecas_salvas:
+        st.dataframe(pd.DataFrame(pecas_salvas), use_container_width=True, hide_index=True)
+    else:
+        st.info("Nenhuma peça cadastrada no estoque ainda.")
 
 elif escolha == "📋 Ordens de Serviço (OS)":
     st.markdown("### 📋 Ordens de Serviço")

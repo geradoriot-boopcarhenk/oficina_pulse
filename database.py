@@ -79,21 +79,26 @@ def obter_logomarca_oficina(oficina_id):
     return None
 
 def listar_pecas_estoque(oficina_id):
-    url = f"{SUPABASE_URL}/rest/v1/estoque_pecas?oficina_id=eq.{oficina_id}&select=*"
+    url = f"{SUPABASE_URL}/rest/v1/estoque_pecas?select=*"
     res = requests.get(url, headers=HEADERS)
     return res.json() if res.status_code == 200 else []
 
 def cadastrar_peca_estoque(oficina_id, nome, qtd, custo, venda):
     url = f"{SUPABASE_URL}/rest/v1/estoque_pecas"
-    dados = {
-        "oficina_id": oficina_id,
-        "nome_peça": nome,
-        "quantidade_atual": int(qtd),
-        "preco_custo": float(custo),
-        "preco_venda": float(venda)
-    }
-    res = requests.post(url, headers=HEADERS, json=dados)
-    return res.status_code == 201
+    # Tenta primeiro sem cedilha e sem oficina_id (padrao mais comum), depois com cedilha
+    tentativas = [
+        {"nome_peca": nome, "quantidade": int(qtd), "preco_custo": float(custo), "preco_venda": float(venda)},
+        {"nome_peca": nome, "quantidade_atual": int(qtd), "preco_custo": float(custo), "preco_venda": float(venda)},
+        {"oficina_id": oficina_id, "nome_peça": nome, "quantidade_atual": int(qtd), "preco_custo": float(custo), "preco_venda": float(venda)}
+    ]
+    ultimo_erro = ""
+    for dados in tentativas:
+        res = requests.post(url, headers=HEADERS, json=dados)
+        if res.status_code in (200, 201):
+            return True
+        ultimo_erro = f"({res.status_code}): {res.text}"
+    st.error(f"Erro Supabase Estoque {ultimo_erro}")
+    return False
 
 def listar_clientes(oficina_id):
     url = f"{SUPABASE_URL}/rest/v1/clientes?select=*"
