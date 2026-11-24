@@ -143,6 +143,15 @@ if logo_data:
     st.sidebar.image(f"data:image/png;base64,{logo_data}", use_container_width=True)
 else:
     st.sidebar.markdown(f"### 🏢 {nome_oficina_ativa}")
+with st.sidebar.expander("🖼️ Alterar Logomarca"):
+    arquivo_logo = st.file_uploader("Envie a logo (PNG/JPG)", type=["png", "jpg", "jpeg"])
+    if arquivo_logo and st.button("Salvar Logomarca"):
+        img_b64 = base64.b64encode(arquivo_logo.read()).decode("utf-8")
+        if db.salvar_logomarca_oficina(oficina_id, img_b64):
+            st.success("✅ Logo atualizada!")
+            st.rerun()
+        else:
+            st.error("❌ Erro ao salvar. Verifique a coluna 'logomarca_base64' no Supabase.")
 
 if st.sidebar.button("🚪 Sair / Trocar de Conta"):
     st.session_state["oficina_autenticada"] = None
