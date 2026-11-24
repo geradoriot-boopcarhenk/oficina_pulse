@@ -104,7 +104,10 @@ def cadastrar_cliente(nome, telephone, cpf, oficina_id):
     url = f"{SUPABASE_URL}/rest/v1/clientes"
     dados = {"nome": nome, "telefone": telephone, "cpf": cpf, "oficina_id": oficina_id}
     res = requests.post(url, headers=HEADERS, json=dados)
-    return res.status_code == 201
+    if res.status_code not in:
+        st.error(f"Erro Supabase ({res.status_code}): {res.text}")
+    return res.status_code in [200, 201]
+
 
 def criar_ordem_servico(cliente_id, descricao, valor_mao_de_obra):
     url = f"{SUPABASE_URL}/rest/v1/ordens_servico"
