@@ -157,6 +157,20 @@ except:
 
 if logo_data:
     st.sidebar.image(f"data:image/png;base64,{logo_data}", use_container_width=True)
+    st.markdown(
+        f"""
+        <style>
+        .stApp {{
+            background-image: linear-gradient(rgba(14, 17, 23, 0.88), rgba(14, 17, 23, 0.88)), url("data:image/png;base64,{logo_data}");
+            background-size: min(280px, 65vw);
+            background-position: center;
+            background-repeat: no-repeat;
+            background-attachment: fixed;
+        }}
+        </style>
+        """,
+        unsafe_allow_html=True
+    )
 else:
     st.sidebar.markdown(f"### 🏢 {nome_oficina_ativa}")
 

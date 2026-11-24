@@ -157,7 +157,7 @@ if logo_data:
         <style>
         .stApp {{
             background-image: linear-gradient(rgba(14, 17, 23, 0.88), rgba(14, 17, 23, 0.88)), url("data:image/png;base64,{logo_data}");
-            background-size: 420px;
+            background-size: min(280px, 65vw);
             background-position: center;
             background-repeat: no-repeat;
             background-attachment: fixed;
